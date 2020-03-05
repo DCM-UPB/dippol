@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <main.h>
-#include <treat_inp.h>
+#include "../include/main.h"
+#include "../include/treat_inp.h"
 #include <loos.hpp>
 //#include <boost/program_options.hpp>
 //#include <boost/filesystem.hpp>
@@ -24,11 +24,11 @@
 int main(int argc, char *argv[]){
   input_info input={0,0,"","",""};
   sys_info sys={{0.,0.,0.},0,0,0,0,0,0,0,0.0,				\
-		0,0,0,NULL,0,0,0,0,					\
-		0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,	\
-		0.0,0.0,0.0,0.0,					\
-		0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-
+  0,0,0,NULL,0,0,0,0,					\
+  0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,	\
+  0.0,0.0,0.0,0.0,					\
+  0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+  
 #ifdef DEBUG
   cout << "You are running the DEBUG-mode.\n";
   cout << "I hope you know what you are doing.\n";

@@ -3,9 +3,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <main.h>
 #include <math.h>
-#include <my_math.h>
+#include "../include/main.h"
+#include "../include/my_math.h"
 
 /*=================================================================
   This subroutine calculates the permanent molecular dipole moment

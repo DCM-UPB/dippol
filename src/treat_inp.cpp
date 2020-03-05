@@ -10,10 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <main.h>
-#include <my_math.h>
-#include <treat_inp.h>
-#include <dip_pol.h>
+#include "../include/main.h"
+#include "../include/dip_pol.h"
+#include "../include/my_math.h"
+#include "../include/treat_inp.h"
 #include <loos.hpp>
 
 /*==================================*/

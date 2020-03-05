@@ -5,14 +5,16 @@
 
 */
 
+#include <iostream>
+#include <iomanip>
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <math.h>
-#include <main.h>
-#include <dip_pol.h>
-#include <mol_atom.h>
-#include <my_math.h>
-#include <write.h>
+#include "../include/main.h"
+#include "../include/dip_pol.h"
+#include "../include/mol_atom.h"
+#include "../include/my_math.h"
+#include "../include/write.h"
 
 
 void val_init(sys_info *sys, mol_info *mol, vect_3d *dip0, vect_3d *dip0_mol, mat_sym_3d *pol0, mat_sym_3d *pol0_mol, FILE *file_traj, FILE *file_dip0, FILE *file_pol0, int step){
@@ -41,9 +43,17 @@ void val_init(sys_info *sys, mol_info *mol, vect_3d *dip0, vect_3d *dip0_mol, ma
 
 
     /*==============================================
-    The atomic polarizability can be used even
-    without atomic dipole: 1 on 3 point independents
-    therefore there are 4 possibilities
+     * Note:
+     * typ_dip 1 = atomic dipole moment
+     * typ_pol 1 = atomic polarizabilit
+     * 
+     * The atomic polarizability can be used even
+     * without atomic dipole: 1 on 3 point independents
+     * 
+     * Therefore there are 4 possibilities:
+     * at_dip+ mol_pol is not possible,
+     * all three other combinations are possible, i.e.:
+     * at_dip + at_pol, mol_dip + at_pol, mol_dip + mol_pol
     ================================================*/
     if((*sys).typ_dip){ /*Atomic dipole moment*/
       if((*sys).typ_pol){ /* Atomic polarizability */
@@ -52,8 +62,9 @@ void val_init(sys_info *sys, mol_info *mol, vect_3d *dip0, vect_3d *dip0_mol, ma
         pol0_at2mol(&(pol0[3*i]),&(pol0_mol[i]));
       }
       else{ /* Molecular polarizability */
-        printf("I thought that I had blocked this possibility.\n");
-        printf("End of program.\n");
+          std::cout << "The combination of atomic dipole with molecular polarizability is not possible!" << std::endl;
+          std::cout << "Please modify the input accordingly." << std::endl;
+          std::cout << "End of program" << std::endl;
         exit(0);
       }
     }
