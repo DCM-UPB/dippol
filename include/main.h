@@ -8,6 +8,9 @@
 
 /*============================================*/
 /*============================================*/
+#ifndef MAIN_H_INCLUDED
+#define MAIN_H_INCLUDED
+
 #ifndef CONSTANTS
 #define CHAIN_SIZE 200 /* Maximal lenght of a chain of characters */
 
@@ -148,3 +151,5 @@ typedef struct sys_info
 
 
 #endif
+
+#endif // MAIN_H_INCLUDED
