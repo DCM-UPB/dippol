@@ -10,15 +10,20 @@
 #1. Use the extended dipole model as suggested by Torii in
 #   Chem. Phys. Lett., 353, 431, 2002 (See the beta-mu term in eq. 5)
 #2. Treat a system with arbitrary topology, one simply reads
-#   a topology file which defines "molecules", additionally, several input files,
-#   one per molecule kind, are also reads to define the gas-phase dipole moment,
-#   polarizability, hyperpolarizability, together with the molecular coordinates frame
+#   a psf topology file which defines "molecules", additionally, several input files,
+#   one per molecule kind, are also needed to define the gas-phase dipole moment,
+#   polarizability, hyperpolarizability, together with the molecular coordinate frame
 #   that corresponds to these tensors.
-#3. (Not-yet implemented) Periodic boundary conditions: Interactions with molecules beyond the cutoff is
-#   now calculated using periodic boundary conditions. See:
+#3. (Not-yet implemented) Periodic boundary conditions: Interactions with molecules
+#    beyond the cutoff is now calculated using periodic boundary conditions. See:
 #   - A. Aguado and P. A. Madden, J. Chem. Phys. 119, 7471, 2003
 #   - T. Laino and J. Hutter, J. Chem. Phys. 129, 074102, 2008
 #4. (Not-yet implemented): Solving the SCF on a grid by a collocation of Legendre functions.
+#
+#
+#To handle psf topologies, the code now requires linking against the loos library,
+#see http://grossfieldlab.github.io/loos/
+
 
 #=========
 #Make file
@@ -72,3 +77,10 @@ DEBUG='warning'
 #  to a triple point description
 # -pos.xyz which is here just for the tests, since it
 #  10 steps of an SPC/E dynamic
+#
+#
+#Tests for the new features by Hossam Elgabarty:
+#...
+#...
+#...
+#...
