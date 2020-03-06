@@ -17,6 +17,7 @@
 #include "../include/treat_inp.h"
 #include <loos.hpp>
 #include <vector>
+#include <sstream>
 
 /*==================================*/
 /*Reading the input file of the user*/
@@ -87,7 +88,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     //symb=fgetc(file);
     file.get(symb);
     //file.ignore(1000,'\n');
-    std::cout << symb << std::endl;
+    //std::cout << symb << std::endl;
     //fgets(chain,CHAIN_SIZE,file);
     file.getline(chain,CHAIN_SIZE);
 
@@ -112,7 +113,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   //fgets(chain,CHAIN_SIZE,file);
   file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%s %s %s",p,q,r);
-  std::cout << p << q << r << std::endl;
+  //std::cout << p << q << r << std::endl;
   if(strcmp(r,"X")==0){(*sys).r=0;}
   else if(strcmp(r,"Y")==0){(*sys).r=1;}
   else if(strcmp(r,"Z")==0){(*sys).r=2;}
@@ -181,7 +182,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
 	   &((*sys).AO_xx),&((*sys).AO_yy),&((*sys).AO_zz),		\
 	   &((*sys).AH_xx),&((*sys).AH_yy),&((*sys).AH_zz),		\
 	   &((*sys).AH_yx),&((*sys).AH_zx),&((*sys).AH_zy));
-    std::cout << (*sys).AO_xx << " " << &((*sys).AO_yy) << " " << &((*sys).AO_zz) << std::endl;
+    //std::cout << (*sys).AO_xx << " " << &((*sys).AO_yy) << " " << &((*sys).AO_zz) << std::endl;
   }
   else if(symb=='m'||symb=='M'){
       std::cout << "Using molecular polarizability" << std::endl;
@@ -201,9 +202,9 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     &((*sys).A_xx),&((*sys).A_xy),&((*sys).A_xz),	\
     &((*sys).A_yx),&((*sys).A_yy),&((*sys).A_zz),	\
     &((*sys).A_zx),&((*sys).A_zy),&((*sys).A_zz));
-    std::cout << (*sys).A_xx << " " << (*sys).A_xy << " " << (*sys).A_xz << std::endl;
-    std::cout << (*sys).A_yx << " " << (*sys).A_yy << " " << (*sys).A_yz << std::endl;
-    std::cout << (*sys).A_zx << " " << (*sys).A_zy << " " << (*sys).A_zz << std::endl;
+    //std::cout << (*sys).A_xx << " " << (*sys).A_xy << " " << (*sys).A_xz << std::endl;
+    //std::cout << (*sys).A_yx << " " << (*sys).A_yy << " " << (*sys).A_yz << std::endl;
+    //std::cout << (*sys).A_zx << " " << (*sys).A_zy << " " << (*sys).A_zz << std::endl;
   }
   else{
     printf("Problem with the kind of polarizability. Please chose \"A(a)tomic\" or \"M(m)olecular\"\nEnd of program.\n");exit(0);
@@ -215,10 +216,78 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   sscanf(chain,"%d",&((*sys).intra));
   std::cout << (*sys).intra << std::endl;
   
-  //fclose(file);
-  file.close();
+  //NOTE now new code to parse ref molecules.
+  //NOTE should at some point create a map from the first current
+  //NOTE linking each molecule id to a pointer to the correct reference mol
+    std::string line;
+    std::stringstream ss;
+    while (getline(file,line))
+    {
+        if (line[0] == '[')
+        {   
+            mol_type new_type;
+            std::string name = line;
+            std::size_t name_end = name.find("]");
+            if (name_end ==std::string::npos)
+            {
+               std::cout << "Ill-formated residue name, exiting!" << std::endl;
+               exit(0);
+            }
+            name = name.substr(1,name_end-1);
+            int mol_size;
+            file >> mol_size;
+            file.ignore(1000,'\n');
+            loos::AtomicGroup new_mol(3);
+            for (int i=0; i < new_mol.size(); i++)
+            {
+                std::string at_label;
+                double at_x, at_y, at_z;
+                file >> at_label >> at_x >> at_y >> at_z;
+                file.ignore(1000,'\n');
+                new_mol[i]->name(at_label);
+                new_mol[i]->coords(loos::GCoord(at_x,at_y,at_z));
+            }
+            new_type.ref = new_mol.copy();
+            std::cout << "found molecule with name " << name << std::endl;
+            std::cout << new_mol << std::endl;
+            getline(file,line);
+            ss.str(line);
+            std::string first;
+            ss >> first;
+            while ( (first != "END") && file.good() )
+            {
+                if (first == "DIP")
+                {
+                  ss >> new_type.dip[0] >> new_type.dip[1] >> new_type.dip[2];
+                  //file.ignore(1000,'\n');
+                  std::cout << "found dip\n";
+                  std::cout << new_type.dip[0] << new_type.dip[1] << new_type.dip[2] << std::endl;
+                }
+                else if ( first == "ALPHA")
+                {
+                    ss >> new_type.alpha[0][0] >> new_type.alpha[0][1] >> new_type.alpha[0][2]
+                         >> new_type.alpha[1][0] >> new_type.alpha[1][1] >> new_type.alpha[1][2]
+                         >> new_type.alpha[2][0] >> new_type.alpha[2][1] >> new_type.alpha[2][2];
+                    //file.ignore(1000,'\n');
+                    std::cout << "found alpha\n";
+                }
+                else if (first == "BETA" )
+                {
+                   //file.ignore(1000,'\n');
+                   std::cout << "found beta\n";
+                }
+                getline(file,line);
+                ss.str(line);
+                ss >> first;
+            }
+            (*sys).all_mol_types[name] = new_type;
+            std::cout << std::endl;
+        }
+    }
+  
+    //fclose(file);
+    file.close();
 }
-
 
 
 

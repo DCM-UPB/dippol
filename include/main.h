@@ -12,6 +12,7 @@
 #define MAIN_H_INCLUDED
 
 #include <loos.hpp>
+#include <map>
 
 #ifndef CONSTANTS
 #define CHAIN_SIZE 200 /* Maximal lenght of a chain of characters */
@@ -63,6 +64,13 @@ typedef struct mol_info
 
   double x,y,z;/*mass center*/
 } mol_info;
+
+struct mol_type{
+    loos::AtomicGroup ref;
+    double dip[3] = {0.,0.,0.};
+    double alpha[3][3] = { {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} };
+    double beta[3][3][3] = {{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} },{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} },{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} }};
+};
 
 /* Structure wich contains the dipole moment
    for each water molecule*/
@@ -123,6 +131,7 @@ typedef struct sys_info
   double M_x,M_y,M_z,A_xx,A_xy,A_xz,A_yx,A_yy,A_yz,A_zx,A_zy,A_zz;
   double MO_z,AO_xx,AO_yy,AO_zz;
   double MH_z,AH_xx,AH_yy,AH_zz,AH_yx,AH_zx,AH_zy;
+  std::map<std::string,mol_type> all_mol_types;
 } sys_info;
 #endif
 
