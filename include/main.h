@@ -65,12 +65,6 @@ typedef struct mol_info
   double x,y,z;/*mass center*/
 } mol_info;
 
-struct mol_type{
-    loos::AtomicGroup ref;
-    double dip[3] = {0.,0.,0.};
-    double alpha[3][3] = { {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} };
-    double beta[3][3][3] = {{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} },{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} },{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} }};
-};
 
 /* Structure wich contains the dipole moment
    for each water molecule*/
@@ -79,6 +73,15 @@ struct mol_type{
 //  double x,y,z;
 //} vect_3d;
 using vect_3d = loos::GCoord;
+
+struct mol_type{
+    loos::AtomicGroup ref;
+    //double dip[3] = {0.,0.,0.};
+    vect_3d dip = loos::GCoord(0.0,0.0,0.0);
+    double alpha[3][3] = { {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} };
+    //mat_sym_3d alpha;
+    double beta[3][3][3] = {{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} },{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} },{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} }};
+};
 
 /*
   Structure wich contains the symmetric

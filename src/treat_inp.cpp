@@ -185,7 +185,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     //std::cout << (*sys).AO_xx << " " << &((*sys).AO_yy) << " " << &((*sys).AO_zz) << std::endl;
   }
   else if(symb=='m'||symb=='M'){
-      std::cout << "Using molecular polarizability" << std::endl;
+      //std::cout << "Using molecular polarizability" << std::endl;
     if((*sys).typ_dip){
       printf("What you are doing is not possible\n");
       printf("To have the ATOMIC induced dipole moment,\n");
@@ -214,7 +214,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   //fgets(chain,CHAIN_SIZE,file);
   file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%d",&((*sys).intra));
-  std::cout << (*sys).intra << std::endl;
+  //std::cout << (*sys).intra << std::endl;
   
   //NOTE now new code to parse ref molecules.
   //NOTE should at some point create a map from the first current
@@ -259,7 +259,6 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
                 if (first == "DIP")
                 {
                   ss >> new_type.dip[0] >> new_type.dip[1] >> new_type.dip[2];
-                  //file.ignore(1000,'\n');
                   std::cout << "found dip\n";
                   std::cout << new_type.dip[0] << new_type.dip[1] << new_type.dip[2] << std::endl;
                 }
@@ -268,12 +267,10 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
                     ss >> new_type.alpha[0][0] >> new_type.alpha[0][1] >> new_type.alpha[0][2]
                          >> new_type.alpha[1][0] >> new_type.alpha[1][1] >> new_type.alpha[1][2]
                          >> new_type.alpha[2][0] >> new_type.alpha[2][1] >> new_type.alpha[2][2];
-                    //file.ignore(1000,'\n');
                     std::cout << "found alpha\n";
                 }
                 else if (first == "BETA" )
                 {
-                   //file.ignore(1000,'\n');
                    std::cout << "found beta\n";
                 }
                 getline(file,line);
@@ -284,8 +281,9 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
             std::cout << std::endl;
         }
     }
-  
-    //fclose(file);
+
+    //std::cout << (*sys).all_mol_types["WAT"].dip[2] << std::endl;
+    //std::cout << (*sys).all_mol_types["CHL"].dip[2] << std::endl;
     file.close();
 }
 
