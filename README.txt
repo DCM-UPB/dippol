@@ -9,14 +9,14 @@
 #
 #Code modified by Hossam Elgabarty in a number of ways:
 #
-#1. Use the extended dipole model as suggested by Torii in
-#   Chem. Phys. Lett., 353, 431, 2002 (See the beta-mu term in eq. 5)
-#
-#2. Treat a system with arbitrary topology, one simply reads
-#   a psf topology file which defines "molecules", additionally, several input files,
+#1. Treat a system with arbitrary topology, one simply reads
+#   a psf topology file which defines "molecules" (psf residues), additionally, several input blocks,
 #   one per molecule kind, are also needed to define the gas-phase dipole moment,
 #   polarizability, hyperpolarizability, together with the molecular coordinate frame
 #   that corresponds to these tensors.
+#
+#2. (Not yet implemented) Use the extended dipole model as suggested by Torii in
+#   Chem. Phys. Lett., 353, 431, 2002 (See the beta-mu term in eq. 5)
 #
 #3. (Not-yet implemented) Periodic boundary conditions: Interactions with molecules
 #    beyond the cutoff is now calculated using periodic boundary conditions. See:
