@@ -86,7 +86,7 @@ void val_init(sys_info *sys, mol_info *mol, vect_3d *dip0, vect_3d *dip0_mol, ma
 
 #ifdef DEBUG
   for(i=0 ; i<(*sys).nb_dip ; i++){
-    fprintf(file_dip0,"%10d %5d %9.4f %9.4f %9.4f\n",step,i,dip0[i].x,dip0[i].y,dip0[i].z);
+    fprintf(file_dip0,"%10d %5d %9.4f %9.4f %9.4f\n",step,i,dip0[i].x(),dip0[i].y(),dip0[i].z());
   }
   for(i=0 ; i<(*sys).nb_pol ; i++){
     fprintf(file_pol0,"%10d %5d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n",step,i,pol0[i].xx,pol0[i].yx,pol0[i].yy, \
@@ -126,7 +126,7 @@ void comp_dip_pol(sys_info *sys, mol_info *mol, double *at_coord, vect_3d *dip0,
     /*Initialization*/
     test_scf=0;
     for(i=0;i<(*sys).nb_dip;i++){
-      v3_tmp[i].x=0.; v3_tmp[i].y=0.; v3_tmp[i].z=0.;
+      v3_tmp[i].x()=0.; v3_tmp[i].y()=0.; v3_tmp[i].z()=0.;
     }
     for(i=0;i<(*sys).nb_pol;i++){
       m3_tmp[i].xx=0.; m3_tmp[i].xy=0.; m3_tmp[i].xz=0.;
@@ -197,18 +197,18 @@ void comp_dip_pol(sys_info *sys, mol_info *mol, double *at_coord, vect_3d *dip0,
     
     for(i=0;i<(*sys).nb_dip;i++){
       /*Update of the complete dipole at the order N+1*/
-      dip[i].x += e_ind[i].x;
-      dip[i].y += e_ind[i].y;
-      dip[i].z += e_ind[i].z;
+      dip[i].x() += e_ind[i].x();
+      dip[i].y() += e_ind[i].y();
+      dip[i].z() += e_ind[i].z();
       
       /*The norm of the induced dipole is not converged*/
-      if(sqrt(pow(e_ind[i].x,2)+pow(e_ind[i].y,2)+pow(e_ind[i].z,2))>DIP_CONV){
+      if(sqrt(pow(e_ind[i].x(),2)+pow(e_ind[i].y(),2)+pow(e_ind[i].z(),2))>DIP_CONV){
         test_scf=1;
       }
       
 #ifdef DEBUG
-      fprintf(file_dip_ind,"%10d %5d %9.4f %9.4f %9.4f\n",step,i,e_ind[i].x,e_ind[i].y,e_ind[i].z);
-      fprintf(file_dip,"%10d %5d %9.4f %9.4f %9.4f\n",step,i,dip[i].x,dip[i].y,dip[i].z);
+      fprintf(file_dip_ind,"%10d %5d %9.4f %9.4f %9.4f\n",step,i,e_ind[i].x(),e_ind[i].y(),e_ind[i].z());
+      fprintf(file_dip,"%10d %5d %9.4f %9.4f %9.4f\n",step,i,dip[i].x(),dip[i].y(),dip[i].z());
 #endif
 
     }
@@ -296,9 +296,9 @@ void comp_dip_pol(sys_info *sys, mol_info *mol, double *at_coord, vect_3d *dip0,
 void sumT_dip(mat_sym_3d *tjk, vect_3d *dip, vect_3d *v3_tmp){
   
   /* Contribution of k on the induced field of j */
-  (*v3_tmp).x -= (*tjk).xx*(*dip).x + (*tjk).yx*(*dip).y + (*tjk).zx*(*dip).z;
-  (*v3_tmp).y -= (*tjk).yx*(*dip).x + (*tjk).yy*(*dip).y + (*tjk).zy*(*dip).z;
-  (*v3_tmp).z -= (*tjk).zx*(*dip).x + (*tjk).zy*(*dip).y + (*tjk).zz*(*dip).z;
+  (*v3_tmp).x() -= (*tjk).xx*(*dip).x() + (*tjk).yx*(*dip).y() + (*tjk).zx*(*dip).z();
+  (*v3_tmp).y() -= (*tjk).yx*(*dip).x() + (*tjk).yy*(*dip).y() + (*tjk).zy*(*dip).z();
+  (*v3_tmp).z() -= (*tjk).zx*(*dip).x() + (*tjk).zy*(*dip).y() + (*tjk).zz*(*dip).z();
 
   return;
 }
@@ -339,7 +339,7 @@ void init_dip_pol(vect_3d *dip0, vect_3d *dip, mat_sym_3d *pol0, mat_3d *pol, sy
   int i=0;
 
   for(i=0;i<(*sys).nb_dip;i++){
-    dip[i].x=dip0[i].x; dip[i].y=dip0[i].y; dip[i].z=dip0[i].z;
+    dip[i].x()=dip0[i].x(); dip[i].y()=dip0[i].y(); dip[i].z()=dip0[i].z();
   }
   for(i=0;i<(*sys).nb_pol;i++){
     pol[i].xx=pol0[i].xx; pol[i].xy=pol0[i].yx; pol[i].xz=pol0[i].zx;
@@ -477,7 +477,7 @@ void scf_protection(sys_info *sys, mol_info *mol, vect_3d *dip0, vect_3d *dip, m
   /*Initialization*/
   init_dip_pol(dip0,dip,pol0,pol,sys);
   for(i=0;i<(*sys).nb_mol;i++){
-    v3_tmp[i].x=0.; v3_tmp[i].y=0.; v3_tmp[i].z=0.;
+    v3_tmp[i].x()=0.; v3_tmp[i].y()=0.; v3_tmp[i].z()=0.;
   }
   for(i=0;i<(*sys).nb_pol;i++){
     m3_tmp[i].xx=0.; m3_tmp[i].xy=0.; m3_tmp[i].xz=0.;
@@ -515,9 +515,9 @@ void scf_protection(sys_info *sys, mol_info *mol, vect_3d *dip0, vect_3d *dip, m
   for(i=0;i<(*sys).nb_mol;i++){
     mult_msym_v_3d(&(pol0_mol[i]),&(v3_tmp[i]),&(e_ind[i]));/*INDUCED dipole moment*/
     /*Total dipole*/
-    dip[i].x = dip0[i].x + e_ind[i].x;
-    dip[i].y = dip0[i].y + e_ind[i].y;
-    dip[i].z = dip0[i].z + e_ind[i].z;
+    dip[i].x() = dip0[i].x() + e_ind[i].x();
+    dip[i].y() = dip0[i].y() + e_ind[i].y();
+    dip[i].z() = dip0[i].z() + e_ind[i].z();
   }
   for(i=0;i<(*sys).nb_point;i++){
     mult_msym_m_3d(&(pol0[i]),&(m3_tmp[i]),&(pol[i]));/*TOTAL polarizability*/

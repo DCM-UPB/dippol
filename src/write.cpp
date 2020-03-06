@@ -37,16 +37,16 @@ void write_dippol(sys_info sys, vect_3d *dip0, vect_3d *dip, mat_sym_3d *pol0, m
 
     switch(sys.r){
     case 0 :
-      p_dip=&(dip[0].x);
-      p_dip0=&(dip0[0].x);
+      p_dip=&(dip[0].x());
+      p_dip0=&(dip0[0].x());
       break;
     case 1 :
-      p_dip=&(dip[0].z);
-      p_dip0=&(dip0[0].y);
+      p_dip=&(dip[0].z());
+      p_dip0=&(dip0[0].y());
       break;
     default :
-      p_dip=&(dip[0].z);
-      p_dip0=&(dip0[0].z);
+      p_dip=&(dip[0].z());
+      p_dip0=&(dip0[0].z());
       break;
     }
 
@@ -76,24 +76,24 @@ void write_dippol(sys_info sys, vect_3d *dip0, vect_3d *dip, mat_sym_3d *pol0, m
       p_polb=&(pol[0].zz);
       p_pol0=&(pol0[0].yy);
       p_pol0b=&(pol0[0].zz);
-      p_dip=&(dip[0].x);
-      p_dip0=&(dip0[0].x);
+      p_dip=&(dip[0].x());
+      p_dip0=&(dip0[0].x());
     }
     else if(sys.p==-2){/*XXY+ZZY*/
       p_pol=&(pol[0].xx);
       p_polb=&(pol[0].zz);
       p_pol0=&(pol0[0].xx);
       p_pol0b=&(pol0[0].zz);
-      p_dip=&(dip[0].y);
-      p_dip0=&(dip0[0].y);
+      p_dip=&(dip[0].y());
+      p_dip0=&(dip0[0].y());
     }
     else{/*XXZ+YYZ*/
       p_pol=&(pol[0].xx);
       p_polb=&(pol[0].yy);
       p_pol0=&(pol0[0].xx);
       p_pol0b=&(pol0[0].yy);
-      p_dip=&(dip[0].z);
-      p_dip0=&(dip0[0].z);
+      p_dip=&(dip[0].z());
+      p_dip0=&(dip0[0].z());
     }
 
     for(i=0;i<sys.nb_mol;i++){

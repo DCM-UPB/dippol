@@ -44,17 +44,17 @@ void pbc_mol(vect_3d cell, mol_info *mol){
 /* Rewrite some coordinates respecting the pbc conditions
    The coordinates will be between -param/2 and param/2 */
 void pbc(vect_3d cell, double *x, double *y, double *z){
-  *x = *x - rint(*x / cell.x) * cell.x;
-  *y = *y - rint(*y / cell.y) * cell.y;
-  *z = *z - rint(*z / cell.z) * cell.z;
+  *x = *x - rint(*x / cell.x()) * cell.x();
+  *y = *y - rint(*y / cell.y()) * cell.y();
+  *z = *z - rint(*z / cell.z()) * cell.z();
 }
 
 
 /*Multiplication of a symmetric 3D matrix and a 3D vector*/
 void mult_msym_v_3d(mat_sym_3d *m, vect_3d *vin, vect_3d *vout){
-  (*vout).x = (*m).xx*(*vin).x + (*m).yx*(*vin).y + (*m).zx*(*vin).z;
-  (*vout).y = (*m).yx*(*vin).x + (*m).yy*(*vin).y + (*m).zy*(*vin).z;
-  (*vout).z = (*m).zx*(*vin).x + (*m).zy*(*vin).y + (*m).zz*(*vin).z;
+  (*vout).x() = (*m).xx*(*vin).x() + (*m).yx*(*vin).y() + (*m).zx*(*vin).z();
+  (*vout).y() = (*m).yx*(*vin).x() + (*m).yy*(*vin).y() + (*m).zy*(*vin).z();
+  (*vout).z() = (*m).zx*(*vin).x() + (*m).zy*(*vin).y() + (*m).zz*(*vin).z();
 }
 
 
@@ -127,9 +127,9 @@ structures with the positions will be removed
 It just serves to rotate the H atomic dipole moment
 from bond referential to lab referential*/
 void rot_dip0_H(sys_info *sys, vect_3d *dip0, double *v3){
-  (*dip0).x= v3[0]*(*sys).MH_z ;/*X*/
-  (*dip0).y= v3[1]*(*sys).MH_z ;/*Y*/
-  (*dip0).z= v3[2]*(*sys).MH_z ;/*Z*/
+  (*dip0).x()= v3[0]*(*sys).MH_z ;/*X*/
+  (*dip0).y()= v3[1]*(*sys).MH_z ;/*Y*/
+  (*dip0).z()= v3[2]*(*sys).MH_z ;/*Z*/
 
 }
 

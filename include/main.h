@@ -11,6 +11,8 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
 
+#include <loos.hpp>
+
 #ifndef CONSTANTS
 #define CHAIN_SIZE 200 /* Maximal lenght of a chain of characters */
 
@@ -19,8 +21,8 @@
 #define MH 1. /*Hydrogen*/
 
 /*Convergence reached*/
-#define DIP_CONV 0.001
-#define POL_CONV 0.001
+#define DIP_CONV 0.00001
+#define POL_CONV 0.00001
 
 /*Limits to avoid Infinite SCF*/
 #define A_THOLE 2.4380/0.529177249 /*Screening length (a) in Ang-1 from van Duijnen and Swart, JPCA, 102, 14, 2399, 1998 (Table 7, ab initio, expon)*/
@@ -64,10 +66,11 @@ typedef struct mol_info
 
 /* Structure wich contains the dipole moment
    for each water molecule*/
-typedef struct vect_3d
-{
-  double x,y,z;
-} vect_3d;
+//typedef struct vect_3d
+//{
+//  double x,y,z;
+//} vect_3d;
+using vect_3d = loos::GCoord;
 
 /*
   Structure wich contains the symmetric

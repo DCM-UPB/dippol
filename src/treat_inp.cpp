@@ -10,11 +10,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fstream>
 #include "../include/main.h"
 #include "../include/dip_pol.h"
 #include "../include/my_math.h"
 #include "../include/treat_inp.h"
 #include <loos.hpp>
+#include <vector>
 
 /*==================================*/
 /*Reading the input file of the user*/
@@ -23,7 +25,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   int i=0, first_H=0;
   char symb=0;
   char chain[CHAIN_SIZE]="",p[CHAIN_SIZE]="",q[CHAIN_SIZE]="",r[CHAIN_SIZE]="";
-  FILE *file=NULL;
+  std::ifstream file;
   
   if(argc!=2){
     printf("You have to specify the name of the input file:\n");
@@ -31,14 +33,17 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     printf("\nEnd of program\n");
     exit(0);
   }
-  FOPEN_SAFE(file,argv[1],"r");
+  //FOPEN_SAFE(file,argv[1],"r");
+  file.open(argv[1]);
 
   /* Position file */
-  fgets(chain,CHAIN_SIZE,file);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%s",(*input).namei);
 
   /* topology file */ //Hossam
-  fgets(chain,CHAIN_SIZE,file); //Hossam
+  //fgets(chain,CHAIN_SIZE,file); //Hossam
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%s",(*input).namet); //Hossam
 
   loos::AtomicGroup current_frame = loos::createSystem((*input).namet); //Hossam
@@ -46,32 +51,45 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   std::cout << current_frame.splitByMolecule().size() << std::endl; //Hossam
   
   /* Output file (dippol.dat) */
-  fgets(chain,CHAIN_SIZE,file);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%s",(*input).nameo);
 
 #ifndef YUKI
   /*Output file for the mass center position*/
-  fgets(chain,CHAIN_SIZE,file);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%s",(*input).name_mass);
 #endif
   
   /*Size of the box*/
-  fgets(chain,CHAIN_SIZE,file);
-  sscanf(chain,"%lf %lf %lf",&((*sys).cell.x),&((*sys).cell.y),&((*sys).cell.z));
+  //fgets(chain,CHAIN_SIZE,file);
+  //sscanf(chain,"%lf %lf %lf",&((*sys).cell.x()),&((*sys).cell.y()),&((*sys).cell.z()) );
+  file >> (*sys).cell.x();
+  file >> (*sys).cell.y();
+  file >> (*sys).cell.z();
+  std::cout << "Box size is: " << (*sys).cell << std::endl;
+  file.ignore(1000,'\n');
 
   /*Initial / Final step*/
-  fgets(chain,CHAIN_SIZE,file);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%d %d",&((*input).stepi),&((*input).stepf));
 
   /*Order of the atoms (only the first character will be read)*/
-  fgets(chain,CHAIN_SIZE,file);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%d",&((*sys).at_p_mol));/*Atoms per molecule*/
   MALLOC_SAFE((*sys).order,(*sys).at_p_mol,int);
 
   first_H=1;
   for(i=0;i<(*sys).at_p_mol;i++){
-    symb=fgetc(file);
-    fgets(chain,CHAIN_SIZE,file);
+    //symb=fgetc(file);
+    file.get(symb);
+    //file.ignore(1000,'\n');
+    std::cout << symb << std::endl;
+    //fgets(chain,CHAIN_SIZE,file);
+    file.getline(chain,CHAIN_SIZE);
 
     if(symb=='O'){(*sys).order[i]=0;}
     else if(symb=='H'){
@@ -91,8 +109,10 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     For (*sys).p (*sys).q (*sys).r:
     X=0, Y=1, Z=2
   */
-  fgets(chain,CHAIN_SIZE,file);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%s %s %s",p,q,r);
+  std::cout << p << q << r << std::endl;
   if(strcmp(r,"X")==0){(*sys).r=0;}
   else if(strcmp(r,"Y")==0){(*sys).r=1;}
   else if(strcmp(r,"Z")==0){(*sys).r=2;}
@@ -117,42 +137,54 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   else{printf("Problem with the polarization %s\nEnd of program.\n",p);exit(0);}
   
   /*Cutoff for the induction*/
-  fgets(chain,CHAIN_SIZE,file);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%lf",&((*sys).cutoff));
 
   /*Do we use the Thole damping factor for Tij?*/
-  fgets(chain,CHAIN_SIZE,file);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%d",&((*sys).thole));
 
   /*Atomic or molecular dipole moment?*/
-  symb=fgetc(file);
-  fgets(chain,CHAIN_SIZE,file);
+  //symb=fgetc(file);
+  file.get(symb);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   if(symb=='a'||symb=='A'){
     (*sys).typ_dip=1;/* 1=Atomic dipole moment */
-    fgets(chain,CHAIN_SIZE,file);
+    //fgets(chain,CHAIN_SIZE,file);
+    file.getline(chain,CHAIN_SIZE);
     sscanf(chain,"%lf %lf",&((*sys).MO_z),&((*sys).MH_z));
   }
   else if(symb=='m'||symb=='M'){
     (*sys).typ_dip=0;/* 0=Molecular dipole moment */
-    fgets(chain,CHAIN_SIZE,file);
+    //fgets(chain,CHAIN_SIZE,file);
+    file.getline(chain,CHAIN_SIZE);
     sscanf(chain,"%lf %lf %lf",&((*sys).M_x),&((*sys).M_y),&((*sys).M_z));
+    //std::cout << std::setw(12) << (*sys).M_x << (*sys).M_y << (*sys).M_z << std::endl;
   }
   else{
     printf("Problem with the kind of dipole moment. Please chose \"A(a)tomic\" or \"M(m)olecular\"\nEnd of program.\n");exit(0);
   }
 
   /*Atomic or molecular polarizability?*/
-  symb=fgetc(file);
-  fgets(chain,CHAIN_SIZE,file);
+  //symb=fgetc(file);
+  file.get(symb);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   if(symb=='a'||symb=='A'){
     (*sys).typ_pol=1;/* 1=Atomic polarizability */
-    fgets(chain,CHAIN_SIZE,file);
+    //fgets(chain,CHAIN_SIZE,file);
+    file.getline(chain,CHAIN_SIZE);
     sscanf(chain,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",			\
 	   &((*sys).AO_xx),&((*sys).AO_yy),&((*sys).AO_zz),		\
 	   &((*sys).AH_xx),&((*sys).AH_yy),&((*sys).AH_zz),		\
 	   &((*sys).AH_yx),&((*sys).AH_zx),&((*sys).AH_zy));
+    std::cout << (*sys).AO_xx << " " << &((*sys).AO_yy) << " " << &((*sys).AO_zz) << std::endl;
   }
   else if(symb=='m'||symb=='M'){
+      std::cout << "Using molecular polarizability" << std::endl;
     if((*sys).typ_dip){
       printf("What you are doing is not possible\n");
       printf("To have the ATOMIC induced dipole moment,\n");
@@ -162,21 +194,29 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
       exit(0);
     }
     (*sys).typ_pol=0;/* 0=Molecular polarizability */
-    fgets(chain,CHAIN_SIZE,file);
+    //fgets(chain,CHAIN_SIZE,file);
+    //file.ignore(1000,'\n');
+    file.getline(chain,CHAIN_SIZE);
     sscanf(chain,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",		\
-	   &((*sys).A_xx),&((*sys).A_xy),&((*sys).A_xz),	\
-	   &((*sys).A_yx),&((*sys).A_yy),&((*sys).A_zz),	\
-	   &((*sys).A_zx),&((*sys).A_zy),&((*sys).A_zz));
+    &((*sys).A_xx),&((*sys).A_xy),&((*sys).A_xz),	\
+    &((*sys).A_yx),&((*sys).A_yy),&((*sys).A_zz),	\
+    &((*sys).A_zx),&((*sys).A_zy),&((*sys).A_zz));
+    std::cout << (*sys).A_xx << " " << (*sys).A_xy << " " << (*sys).A_xz << std::endl;
+    std::cout << (*sys).A_yx << " " << (*sys).A_yy << " " << (*sys).A_yz << std::endl;
+    std::cout << (*sys).A_zx << " " << (*sys).A_zy << " " << (*sys).A_zz << std::endl;
   }
   else{
     printf("Problem with the kind of polarizability. Please chose \"A(a)tomic\" or \"M(m)olecular\"\nEnd of program.\n");exit(0);
   }
-
+  //file.ignore(1000,'\n');
   /*Do we take into account the intra molecular DID?*/
-  fgets(chain,CHAIN_SIZE,file);
+  //fgets(chain,CHAIN_SIZE,file);
+  file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%d",&((*sys).intra));
+  std::cout << (*sys).intra << std::endl;
   
-  fclose(file);
+  //fclose(file);
+  file.close();
 }
 
 
@@ -210,7 +250,7 @@ void trajectory(sys_info *sys, input_info input, char *argv[]) {
   FOPEN_SAFE(file_traj,input.name_mass,"w+");
   fprintf(fileo,"#This file has been written by %s. Edit it at your own risk.\n",argv[0]);
   fprintf(fileo,"#Mass_center_file %s\n",input.name_mass);
-  fprintf(fileo,"#Cell_parameters %f %f %f\n",(*sys).cell.x,(*sys).cell.y,(*sys).cell.z);
+  fprintf(fileo,"#Cell_parameters %f %f %f\n",(*sys).cell.x(),(*sys).cell.y(),(*sys).cell.z());
   fprintf(fileo,"#Cutoff_Ang %f\n",(*sys).cutoff);
   fprintf(fileo,"#Dip0 Dip_comp Pol0 Pol_comp\n");
 #endif

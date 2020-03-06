@@ -42,9 +42,9 @@ void dippol0_molmol(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d *dip0, 
     Calculation of the dipole moment (gas phase-like)
     Initially it is on the bissector
   */
-  (*dip0).x=(*sys).M_z*v3[0];
-  (*dip0).y=(*sys).M_z*v3[1];
-  (*dip0).z=(*sys).M_z*v3[2];
+  (*dip0).x()=(*sys).M_z*v3[0];
+  (*dip0).y()=(*sys).M_z*v3[1];
+  (*dip0).z()=(*sys).M_z*v3[2];
 
   /*
     Calculation of the polarizability tensor (gas phase-like)
@@ -87,9 +87,9 @@ void dippol0_molat(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d *dip0, m
     Calculation of the permanent dipole moment of the whole molecule
     Initially it is on the bissector
   */
-  (*dip0).x=(*sys).M_z*v3[0];
-  (*dip0).y=(*sys).M_z*v3[1];
-  (*dip0).z=(*sys).M_z*v3[2];
+  (*dip0).x()=(*sys).M_z*v3[0];
+  (*dip0).y()=(*sys).M_z*v3[1];
+  (*dip0).z()=(*sys).M_z*v3[2];
 
   /*
     Calculation of the permanent polarizability tensor of O
@@ -156,9 +156,9 @@ void dippol0_atat(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d *dip0, ma
   cross_p(v2,v3,v1);
       
   /* Calculation of the permanent dipole moment of the O atom */
-  (*dip0).x=(*sys).MO_z*v3[0];
-  (*dip0).y=(*sys).MO_z*v3[1];
-  (*dip0).z=(*sys).MO_z*v3[2];
+  (*dip0).x()=(*sys).MO_z*v3[0];
+  (*dip0).y()=(*sys).MO_z*v3[1];
+  (*dip0).z()=(*sys).MO_z*v3[2];
 
   /*
     Calculation of the permanent polarizability tensor of O
@@ -209,9 +209,9 @@ void dippol0_atat(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d *dip0, ma
 /* This subroutine sums the atomic contribution to calculate
    the molecular contribution (dip)*/
 void dip_at2mol(vect_3d *dip, vect_3d *dip_mol){
-  (*dip_mol).x = (*(dip + 0)).x + (*(dip + 1)).x + (*(dip + 2)).x;
-  (*dip_mol).y = (*(dip + 0)).y + (*(dip + 1)).y + (*(dip + 2)).y;
-  (*dip_mol).z = (*(dip + 0)).z + (*(dip + 1)).z + (*(dip + 2)).z;
+  (*dip_mol).x() = (*(dip + 0)).x() + (*(dip + 1)).x() + (*(dip + 2)).x();
+  (*dip_mol).y() = (*(dip + 0)).y() + (*(dip + 1)).y() + (*(dip + 2)).y();
+  (*dip_mol).z() = (*(dip + 0)).z() + (*(dip + 1)).z() + (*(dip + 2)).z();
 }
 
 
