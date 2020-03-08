@@ -41,14 +41,6 @@ int main(int argc, char *argv[]){
   // Read the input file
   read_input(&input,&sys,argc,argv);
 
-  //loos::AtomicGroup current_frame = loos::createSystem(input.namei);
-  //std::cout << current_frame.size() << std::endl;
-  
-  //current_frame.periodicBox(PBOX);
-  
-  //pTraj traj = createTrajectory(vm["xyz"].as<string>().c_str(),current_frame);
-  
-  
   //  Open/Read/Close the position file
   //  Each step, the polarizability and
   //  the dipole moment are calculated

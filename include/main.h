@@ -15,7 +15,7 @@
 #include <map>
 
 #ifndef CONSTANTS
-#define CHAIN_SIZE 200 /* Maximal lenght of a chain of characters */
+#define CHAIN_SIZE 200 /* Maximal length of a chain of characters */
 
 /* Molar weight */
 #define MO 16. /*Oxygen*/
@@ -46,10 +46,13 @@
 /*============================================*/
 /*============================================*/
 #ifndef STRUCTURES
+
+
 /* Structure which contains the positions
    the three different atoms composing a
    water molecule.
 */
+//NOTE should be deleted, using vector<AtomicGroup> now
 typedef struct mol_info
 {
   /*DO NOT CHANGE THE ORDER OF O, H1, H2 and dummy*/
