@@ -30,16 +30,17 @@ void norm(double *v1, double *v2){
   return;
 }
 
-/* Rewrite the molecule coordinate to have the mass center
-   between -param/2 and param/2 */
-void pbc_mol(vect_3d cell, mol_info *mol){
-  /*Calculation of the mass center*/
-  (*mol).x= (MO* (*mol).xO + MH*(*mol).xH1 + MH* (*mol).xH2 )/(MO+2*MH);
-  (*mol).y= (MO* (*mol).yO + MH*(*mol).yH1 + MH* (*mol).yH2 )/(MO+2*MH);
-  (*mol).z= (MO* (*mol).zO + MH*(*mol).zH1 + MH* (*mol).zH2 )/(MO+2*MH);
-
-  pbc(cell,&((*mol).x),&((*mol).y),&((*mol).z));
-}
+//NOTE removed, using loos::AtomicGroup::reimage()
+// /* Rewrite the molecule coordinate to have the mass center
+//    between -param/2 and param/2 */
+// void pbc_mol(vect_3d cell, mol_info *mol){
+//   /*Calculation of the mass center*/
+//   (*mol).x= (MO* (*mol).xO + MH*(*mol).xH1 + MH* (*mol).xH2 )/(MO+2*MH);
+//   (*mol).y= (MO* (*mol).yO + MH*(*mol).yH1 + MH* (*mol).yH2 )/(MO+2*MH);
+//   (*mol).z= (MO* (*mol).zO + MH*(*mol).zH1 + MH* (*mol).zH2 )/(MO+2*MH);
+// 
+//   pbc(cell,&((*mol).x),&((*mol).y),&((*mol).z));
+// }
 
 /* Rewrite some coordinates respecting the pbc conditions
    The coordinates will be between -param/2 and param/2 */

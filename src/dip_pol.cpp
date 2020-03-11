@@ -344,229 +344,230 @@ void sumT_pol(mat_sym_3d *tjk, mat_3d *pol, mat_3d *m3_tmp){
 /*Initialization before the calculation of 
   the dipole moment and the polarizability*/
 void init_dip_pol(vect_3d *dip0, vect_3d *dip, mat_sym_3d *pol0, mat_3d *pol, sys_info *sys){
-  int i=0;
-
+    int i=0;
+    
   for(i=0;i<(*sys).nb_dip;i++){
-    dip[i].x()=dip0[i].x(); dip[i].y()=dip0[i].y(); dip[i].z()=dip0[i].z();
+      dip[i].x()=dip0[i].x();
+      dip[i].y()=dip0[i].y();
+      dip[i].z()=dip0[i].z();
   }
   for(i=0;i<(*sys).nb_pol;i++){
-    pol[i].xx=pol0[i].xx; pol[i].xy=pol0[i].yx; pol[i].xz=pol0[i].zx;
-    pol[i].yx=pol0[i].yx; pol[i].yy=pol0[i].yy; pol[i].yz=pol0[i].zy;
-    pol[i].zx=pol0[i].zx; pol[i].zy=pol0[i].zy; pol[i].zz=pol0[i].zz;
+      pol[i].xx=pol0[i].xx; pol[i].xy=pol0[i].yx; pol[i].xz=pol0[i].zx;
+      pol[i].yx=pol0[i].yx; pol[i].yy=pol0[i].yy; pol[i].yz=pol0[i].zy;
+      pol[i].zx=pol0[i].zx; pol[i].zy=pol0[i].zy; pol[i].zz=pol0[i].zz;
   }
-
+  
   return;
 }
 
 
 /* Calculation of the dipole field tensor Tij
-   Only for k>j because Tjk=Tkj and Tjj=0 */
+ * Only for k>j because Tjk=Tkj and Tjj=0 */
 void calc_tij(sys_info *sys, std::vector<loos::AtomicGroup> mol, double *at_coord, double *x, double *y, double *z, double *r, double *fthole, mat_sym_3d *Tij, int size, FILE *file_Tij, int step){
-  int i=0, j=0, ij=0;
-  double r3=0., r5=0.;
-  
-  /*Calculation of the distance between the atoms i and j*/
-  if(size==(*sys).nb_mol){ /*Mass center*/
-      loos::GCoord distance;
-      for(i=0;i<size;i++){
-          for(j=i+1;j<size;j++){
-              distance = mol[i].centerOfMass() - mol[j].centerOfMass();
-              distance.reimage((*sys).cell); //NOTE done with pbc function below
-              x[ij] = distance.x();
-              y[ij] = distance.y();
-              z[ij] = distance.z();
-              ij++;
-          }
-      }
-  }
-  else{ /*Atomic*/ //NOTE should be killed
+    int i=0, j=0, ij=0;
+    double r3=0., r5=0.;
+    
+    /*Calculation of the distance between the atoms i and j*/
+    if(size==(*sys).nb_mol){ /*Mass center*/
+        loos::GCoord distance;
+        for(i=0;i<size;i++){
+            for(j=i+1;j<size;j++){
+                distance = mol[i].centerOfMass() - mol[j].centerOfMass();
+                distance.reimage((*sys).cell);
+                x[ij] = distance.x();
+                y[ij] = distance.y();
+                z[ij] = distance.z();
+                ij++;
+            }
+        }
+    }
+    else{ /*Atomic*/ //NOTE should be killed
+        for(i=0;i<size;i++){
+            for(j=i+1;j<size;j++){
+                x[ij] = at_coord[3*i+0] - at_coord[3*j+0];
+                y[ij] = at_coord[3*i+1] - at_coord[3*j+1];
+                z[ij] = at_coord[3*i+2] - at_coord[3*j+2];
+                ij++;
+            }
+        }
+    }
+    for(i=0;i<size*(size-1)/2;i++){
+        //pbc((*sys).cell,&x[i],&y[i],&z[i]); //NOTE done with reimage above
+        r[i]=sqrt(x[i]*x[i]+y[i]*y[i]+z[i]*z[i]);
+    }
+    
+    /* Calculation of the screening functions (Thole)
+     * The parameters are already set to 1.d0 if we do not
+     * want these screening function
+     */
+    if((*sys).thole){
+        thole(r,fthole,size);
+    }
+    
+    /* Calculation of Tij */
+    ij=0;
     for(i=0;i<size;i++){
-      for(j=i+1;j<size;j++){
-        x[ij] = at_coord[3*i+0] - at_coord[3*j+0];
-        y[ij] = at_coord[3*i+1] - at_coord[3*j+1];
-        z[ij] = at_coord[3*i+2] - at_coord[3*j+2];
-        ij++;
-      }
+        for(j=i+1;j<size;j++){
+            
+            if(r[ij]<=(*sys).cutoff){
+                
+                r3=pow(r[ij],-3.)* fthole[2*ij  ]; /*This is 1/r3 with screening function*/
+                r5=3/pow(r[ij],5.)*fthole[2*ij+1]; /*This is 3/r5 with screening function*/
+                
+                /*Tij (=Tji) calculation*/
+                Tij[ij].xx=r3-r5*x[ij]*x[ij];
+                Tij[ij].yx=  -r5*y[ij]*x[ij]; Tij[ij].yy=r3-r5*y[ij]*y[ij];
+                Tij[ij].zx=  -r5*z[ij]*x[ij]; Tij[ij].zy=  -r5*z[ij]*y[ij]; Tij[ij].zz=r3-r5*z[ij]*z[ij];
+                
+            }
+            else{
+                Tij[ij].xx=0.0;
+                Tij[ij].yx=0.0;	Tij[ij].yy=0.0;
+                Tij[ij].zx=0.0;	Tij[ij].zy=0.0;	Tij[ij].zz=0.0;
+            }
+            
+            ij++;
+        }
     }
-  }
-  for(i=0;i<size*(size-1)/2;i++){
-    //pbc((*sys).cell,&x[i],&y[i],&z[i]);
-    r[i]=sqrt(x[i]*x[i]+y[i]*y[i]+z[i]*z[i]);
-  }
-  
-  /* Calculation of the screening functions (Thole)
-     The parameters are already set to 1.d0 if we do not
-     want these screening function
-  */
-  if((*sys).thole){
-    thole(r,fthole,size);
-  }
-
-  /* Calculation of Tij */
-  ij=0;
-  for(i=0;i<size;i++){
-    for(j=i+1;j<size;j++){
-
-      if(r[ij]<=(*sys).cutoff){
-
-        r3=pow(r[ij],-3.)* fthole[2*ij  ]; /*This is 1/r3 with screening function*/
-        r5=3/pow(r[ij],5.)*fthole[2*ij+1]; /*This is 3/r5 with screening function*/
-        
-        /*Tij (=Tji) calculation*/
-        Tij[ij].xx=r3-r5*x[ij]*x[ij];
-        Tij[ij].yx=  -r5*y[ij]*x[ij]; Tij[ij].yy=r3-r5*y[ij]*y[ij];
-        Tij[ij].zx=  -r5*z[ij]*x[ij]; Tij[ij].zy=  -r5*z[ij]*y[ij]; Tij[ij].zz=r3-r5*z[ij]*z[ij];
-        
-      }
-      else{
-        Tij[ij].xx=0.0;
-        Tij[ij].yx=0.0;	Tij[ij].yy=0.0;
-        Tij[ij].zx=0.0;	Tij[ij].zy=0.0;	Tij[ij].zz=0.0;
-      }
-      
-      ij++;
+    
+    /*If we do not want intra molecular DID (for 3 points model only)*/
+    if(size>(*sys).nb_mol){
+        if((*sys).intra==0){
+            ij=0;
+            for(i=0;i<size;i=i+3){/*Only the O are passed*/
+                /*No interaction between O and H1*/
+                Tij[ij].xx=0.0;
+                Tij[ij].yx=0.0;	Tij[ij].yy=0.0;
+                Tij[ij].zx=0.0;	Tij[ij].zy=0.0;	Tij[ij].zz=0.0;
+                
+                /*No interaction between O and H2*/
+                ij++;
+                Tij[ij].xx=0.0;
+                Tij[ij].yx=0.0;	Tij[ij].yy=0.0;
+                Tij[ij].zx=0.0;	Tij[ij].zy=0.0;	Tij[ij].zz=0.0;
+                
+                /*No interaction between H1 and H2*/
+                ij=ij+size-i-2;
+                Tij[ij].xx=0.0;
+                Tij[ij].yx=0.0;	Tij[ij].yy=0.0;
+                Tij[ij].zx=0.0;	Tij[ij].zy=0.0;	Tij[ij].zz=0.0;
+                
+                ij=ij+2*size-2*i-5; /*The intermolecular interactions are passed*/
+            }
+        }
     }
-  }
+    
+    /*
+     * hossam 09.09.2019: commented out the printing of dipolar tensors
+     * these files are huge
+     */
+    
+    /* #ifdef DEBUG */
+    /*   ij=0; */
+    /*   for(i=0;i<size;i++){ */
+    /*     for(j=i+1;j<size;j++){ */
+    /*       fprintf(file_Tij,"%10d %10d %5d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n",step,i,j, \ */
+    /* 	      Tij[ij].xx,Tij[ij].yx,Tij[ij].yy,Tij[ij].zx,Tij[ij].zy,Tij[ij].zz); */
+    /*       ij++; */
+    /*     } */
+    /*   } */
+    /* #endif */
   
-  /*If we do not want intra molecular DID (for 3 points model only)*/
-  if(size>(*sys).nb_mol){
-    if((*sys).intra==0){
-      ij=0;
-      for(i=0;i<size;i=i+3){/*Only the O are passed*/
-        /*No interaction between O and H1*/
-        Tij[ij].xx=0.0;
-        Tij[ij].yx=0.0;	Tij[ij].yy=0.0;
-        Tij[ij].zx=0.0;	Tij[ij].zy=0.0;	Tij[ij].zz=0.0;
-        
-        /*No interaction between O and H2*/
-        ij++;
-        Tij[ij].xx=0.0;
-        Tij[ij].yx=0.0;	Tij[ij].yy=0.0;
-        Tij[ij].zx=0.0;	Tij[ij].zy=0.0;	Tij[ij].zz=0.0;
-        
-        /*No interaction between H1 and H2*/
-        ij=ij+size-i-2;
-        Tij[ij].xx=0.0;
-        Tij[ij].yx=0.0;	Tij[ij].yy=0.0;
-        Tij[ij].zx=0.0;	Tij[ij].zy=0.0;	Tij[ij].zz=0.0;
-        
-        ij=ij+2*size-2*i-5; /*The intermolecular interactions are passed*/
-      }
-    }
-  }
-
-  /*
-    hossam 09.09.2019: commented out the printing of dipolar tensors
-    these files are huge
-  */
-
-/* #ifdef DEBUG */
-/*   ij=0; */
-/*   for(i=0;i<size;i++){ */
-/*     for(j=i+1;j<size;j++){ */
-/*       fprintf(file_Tij,"%10d %10d %5d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n",step,i,j, \ */
-/* 	      Tij[ij].xx,Tij[ij].yx,Tij[ij].yy,Tij[ij].zx,Tij[ij].zy,Tij[ij].zz); */
-/*       ij++; */
-/*     } */
-/*   } */
-/* #endif */
-  
-  return;
+    return;
 }
 
 
 /*Protection against infinite loop
-  If we are out of the limits, only the first order dipole
-  moment and polarizability are written for the whole step
-  XXX TRAVAIL ARBEIT WORK
-  Check if it works
-*/
+ * If we are out of the limits, only the first order dipole
+ * moment and polarizability are written for the whole step
+ * XXX TRAVAIL ARBEIT WORK
+ * Check if it works
+ */
 void scf_protection(sys_info *sys, std::vector<loos::AtomicGroup> mol, vect_3d *dip0, vect_3d *dip, mat_sym_3d *pol0, mat_sym_3d *pol0_mol, mat_3d *pol, mat_sym_3d *Tij_mc, vect_3d *e_ind, vect_3d *v3_tmp, mat_3d *m3_tmp, int step){
     int i=0, j=0, ij=0;
     FILE *file_pb;
-
-  /*Initialization*/
-  init_dip_pol(dip0,dip,pol0,pol,sys);
-  for(i=0;i<(*sys).nb_mol;i++){
-    v3_tmp[i].x()=0.; v3_tmp[i].y()=0.; v3_tmp[i].z()=0.;
-  }
-  for(i=0;i<(*sys).nb_pol;i++){
-    m3_tmp[i].xx=0.; m3_tmp[i].xy=0.; m3_tmp[i].xz=0.;
-    m3_tmp[i].yx=0.; m3_tmp[i].yy=0.; m3_tmp[i].yz=0.;
-    m3_tmp[i].zx=0.; m3_tmp[i].zy=0.; m3_tmp[i].zz=0.;
-  }
-  
-  /*-Sum Tij.dip[j], -Sum Tij.pol[j]*/
-  /*-Sum Tji.dip[i], -Sum Tji.pol[i] */
-  ij=0;
-  for(i=0;i<(*sys).nb_mol;i++){
-    for(j=i+1;j<(*sys).nb_mol;j++){
-      sumT_dip(&(Tij_mc[ij]),&(dip[j]),&(v3_tmp[i]));
-      sumT_dip(&(Tij_mc[ij]),&(dip[i]),&(v3_tmp[j]));
-      ij++;
+    
+    /*Initialization*/
+    init_dip_pol(dip0,dip,pol0,pol,sys);
+    for(i=0;i<(*sys).nb_mol;i++){
+        v3_tmp[i].x()=0.; v3_tmp[i].y()=0.; v3_tmp[i].z()=0.;
     }
-  }
-  ij=0;
-  for(i=0;i<(*sys).nb_point;i++){
-    for(j=i+1;j<(*sys).nb_point;j++){
-      sumT_pol(&(Tij_mc[ij]),&(pol[j]),&(m3_tmp[i]));
-      sumT_pol(&(Tij_mc[ij]),&(pol[i]),&(m3_tmp[j]));
-      ij++;
+    for(i=0;i<(*sys).nb_pol;i++){
+        m3_tmp[i].xx=0.; m3_tmp[i].xy=0.; m3_tmp[i].xz=0.;
+        m3_tmp[i].yx=0.; m3_tmp[i].yy=0.; m3_tmp[i].yz=0.;
+        m3_tmp[i].zx=0.; m3_tmp[i].zy=0.; m3_tmp[i].zz=0.;
     }
-  }
-
-  
-  /*1-Sum Tij.pol[j]*/
-  for(i=0;i<(*sys).nb_point;i++){
-    m3_tmp[i].xx+=1.;
-    m3_tmp[i].yy+=1.;
-    m3_tmp[i].zz+=1.;
-  }
-
-  for(i=0;i<(*sys).nb_mol;i++){
-    mult_msym_v_3d(&(pol0_mol[i]),&(v3_tmp[i]),&(e_ind[i]));/*INDUCED dipole moment*/
-    /*Total dipole*/
-    dip[i].x() = dip0[i].x() + e_ind[i].x();
-    dip[i].y() = dip0[i].y() + e_ind[i].y();
-    dip[i].z() = dip0[i].z() + e_ind[i].z();
-  }
-  for(i=0;i<(*sys).nb_point;i++){
-    mult_msym_m_3d(&(pol0[i]),&(m3_tmp[i]),&(pol[i]));/*TOTAL polarizability*/
-  }
-
-
-  /*Record of the positions with a problem of convergence
-    for further debugging*/
-  FOPEN_SAFE(file_pb,CONV_PB,"a");
-  fprintf(file_pb,"%d\n",(*sys).nb_mol);
-  fprintf(file_pb,"i = %d , this is the positions which had some convergence problem\n",step);
-  for(i=0;i<(*sys).nb_mol;i++){
-      fprintf(file_pb," X  %f %f %f\n",mol[i].centerOfMass().x(),mol[i].centerOfMass().y(),mol[i].centerOfMass().z());
-  }
-  fclose(file_pb);
+    
+    /*-Sum Tij.dip[j], -Sum Tij.pol[j]*/
+    /*-Sum Tji.dip[i], -Sum Tji.pol[i] */
+    ij=0;
+    for(i=0;i<(*sys).nb_mol;i++){
+        for(j=i+1;j<(*sys).nb_mol;j++){
+            sumT_dip(&(Tij_mc[ij]),&(dip[j]),&(v3_tmp[i]));
+            sumT_dip(&(Tij_mc[ij]),&(dip[i]),&(v3_tmp[j]));
+            ij++;
+        }
+    }
+    ij=0;
+    for(i=0;i<(*sys).nb_point;i++){
+        for(j=i+1;j<(*sys).nb_point;j++){
+            sumT_pol(&(Tij_mc[ij]),&(pol[j]),&(m3_tmp[i]));
+            sumT_pol(&(Tij_mc[ij]),&(pol[i]),&(m3_tmp[j]));
+            ij++;
+        }
+    }
+    
+    
+    /*1-Sum Tij.pol[j]*/
+    for(i=0;i<(*sys).nb_point;i++){
+        m3_tmp[i].xx+=1.;
+        m3_tmp[i].yy+=1.;
+        m3_tmp[i].zz+=1.;
+    }
+    
+    for(i=0;i<(*sys).nb_mol;i++){
+        mult_msym_v_3d(&(pol0_mol[i]),&(v3_tmp[i]),&(e_ind[i]));/*INDUCED dipole moment*/
+        /*Total dipole*/
+        dip[i].x() = dip0[i].x() + e_ind[i].x();
+        dip[i].y() = dip0[i].y() + e_ind[i].y();
+        dip[i].z() = dip0[i].z() + e_ind[i].z();
+    }
+    for(i=0;i<(*sys).nb_point;i++){
+        mult_msym_m_3d(&(pol0[i]),&(m3_tmp[i]),&(pol[i]));/*TOTAL polarizability*/
+    }
+    
+    
+    /*Record of the positions with a problem of convergence
+     *for further debugging*/
+    FOPEN_SAFE(file_pb,CONV_PB,"a");
+    fprintf(file_pb,"%d\n",(*sys).nb_mol);
+    fprintf(file_pb,"i = %d , this is the positions which had some convergence problem\n",step);
+    for(i=0;i<(*sys).nb_mol;i++){
+        fprintf(file_pb," X  %f %f %f\n",mol[i].centerOfMass().x(),mol[i].centerOfMass().y(),mol[i].centerOfMass().z());
+    }
+    fclose(file_pb);
 }
 
 
 
 /*This subroutine returns the 2 screening functions*/
 void thole(double *r, double *fthole, int size){
-  int i=0, j=0, ij=0;
-  double x=0;
-  
-  for(i=0;i<size;i++){
-    for(j=i+1;j<size;j++){
-      x=A_THOLE*r[ij];
-      
-      /* Screening of the term in 1/r3 */
-      fthole[2*ij  ]=1-(1 + x + x*x/2.)*exp(-x);
-      /* Screening of the term in 1/r5 */
-      fthole[2*ij+1]=1-(1 + x + x*x/2. + pow(x,3.)/6)*exp(-x);
-
-      ij++;
+    int i=0, j=0, ij=0;
+    double x=0;
+    
+    for(i=0;i<size;i++){
+        for(j=i+1;j<size;j++){
+            x=A_THOLE*r[ij];
+            
+            /* Screening of the term in 1/r3 */
+            fthole[2*ij  ]=1-(1 + x + x*x/2.)*exp(-x);
+            /* Screening of the term in 1/r5 */
+            fthole[2*ij+1]=1-(1 + x + x*x/2. + pow(x,3.)/6)*exp(-x);
+            
+            ij++;
+        }
     }
-  }
-
-
+    
 };
 
 
