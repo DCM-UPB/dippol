@@ -63,9 +63,6 @@ using std::endl;
 // }
 void dippol0_molmol(sys_info *sys, const loos::AtomicGroup molecule, vect_3d *dip0, mat_sym_3d *pol0){
     
-    //cout << molecule << endl;
-    //loos::AtomicGroup ref = sys->all_mol_types[molecule[0]->resname()].ref.copy();
-    //ref.centerAtOrigin();
     Eigen::Matrix3d pa_ref = sys->all_mol_types[molecule[0]->resname()].princ;    
 
     loos::AtomicGroup temp = molecule.copy();
@@ -74,10 +71,6 @@ void dippol0_molmol(sys_info *sys, const loos::AtomicGroup molecule, vect_3d *di
     Eigen::Matrix3d tensor = inertia_tensor(temp);
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> pas_es(tensor);
     Eigen::Matrix3d pa_mol = pas_es.eigenvectors();
-    //cout << "values: " << endl;
-    //cout << pas_es.eigenvalues().transpose() << endl << endl;
-    //cout << "vectors: " << endl;
-    //cout << pas_es.eigenvectors()<< endl << endl;
     
     Eigen::Matrix3d dcm;
     dcm << -1*pa_ref.col(0).dot(pa_mol.col(0)),
@@ -95,12 +88,6 @@ void dippol0_molmol(sys_info *sys, const loos::AtomicGroup molecule, vect_3d *di
     (*dip0).x()=rot_dip(0);
     (*dip0).y()=rot_dip(1);
     (*dip0).z()=rot_dip(2);
-    
-    //std::cout << "After alignment" << std::endl;
-    //for (uint i=0; i< ref.size(); i++)
-    //cout << (dcm * gcoord_to_eigenv(ref[i]->coords())).transpose() << endl;
-    //cout << rot_dip.transpose() << endl << endl;
-    //writexyz(temp,cout);//std::cout << molecule << std::endl;
     
     //Now transform alpha
     Eigen::Matrix3d alpha_rot = dcm * sys->all_mol_types[molecule[0]->resname()].alpha_m * dcm.transpose();

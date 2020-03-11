@@ -371,7 +371,7 @@ void calc_tij(sys_info *sys, std::vector<loos::AtomicGroup> mol, double *at_coor
       for(i=0;i<size;i++){
           for(j=i+1;j<size;j++){
               distance = mol[i].centerOfMass() - mol[j].centerOfMass();
-              //distance.reimage((*sys).cell); //NOTE done with pbc function below
+              distance.reimage((*sys).cell); //NOTE done with pbc function below
               x[ij] = distance.x();
               y[ij] = distance.y();
               z[ij] = distance.z();
@@ -390,7 +390,7 @@ void calc_tij(sys_info *sys, std::vector<loos::AtomicGroup> mol, double *at_coor
     }
   }
   for(i=0;i<size*(size-1)/2;i++){
-    pbc((*sys).cell,&x[i],&y[i],&z[i]);
+    //pbc((*sys).cell,&x[i],&y[i],&z[i]);
     r[i]=sqrt(x[i]*x[i]+y[i]*y[i]+z[i]*z[i]);
   }
   

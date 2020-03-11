@@ -44,9 +44,11 @@ void pbc_mol(vect_3d cell, mol_info *mol){
 /* Rewrite some coordinates respecting the pbc conditions
    The coordinates will be between -param/2 and param/2 */
 void pbc(vect_3d cell, double *x, double *y, double *z){
-  *x = *x - rint(*x / cell.x()) * cell.x();
-  *y = *y - rint(*y / cell.y()) * cell.y();
-  *z = *z - rint(*z / cell.z()) * cell.z();
+    loos::GCoord temp(*x,*y,*z);
+    temp.reimage(cell);
+    *x = temp.x();
+    *y = temp.y();
+    *z = temp.z();
 }
 
 
