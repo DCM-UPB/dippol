@@ -13,6 +13,7 @@
 
 #include <loos.hpp>
 #include <map>
+#include <eigen3/Eigen/Dense>
 
 #ifndef CONSTANTS
 #define CHAIN_SIZE 200 /* Maximal length of a chain of characters */
@@ -80,8 +81,11 @@ using vect_3d = loos::GCoord;
 struct mol_type{
     loos::AtomicGroup ref;
     //double dip[3] = {0.,0.,0.};
+    //std::vector<loos::GCoord> princ;
+    Eigen::Matrix3d princ = Eigen::Matrix3d::Zero();
     vect_3d dip = loos::GCoord(0.0,0.0,0.0);
     double alpha[3][3] = { {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} };
+    Eigen::Matrix3d alpha_m;
     //mat_sym_3d alpha;
     double beta[3][3][3] = {{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} },{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} },{ {0.,0.,0.}, {0.,0.,0.}, {0.,0.,0.} }};
 };
@@ -91,6 +95,8 @@ struct mol_type{
   3D-matrixes. Only the lower part is taken
   into account
 */
+//NOTE at some point substitute these 
+// with eigen objects 
 typedef struct mat_sym_3d
 {
   double xx,yx,yy,zx,zy,zz;

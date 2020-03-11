@@ -16,83 +16,91 @@
 #include "../include/my_math.h"
 #include "../include/write.h"
 
+using std::cout;
+using std::endl;
 
+//NOTE this function simply computes the two H-O vectors
+// and then calls another function to compute dip0 and pol0
+// can simply call those functions and pass to them the mol vector
+// no need to precompute O-H vectors
 void val_init(sys_info *sys, std::vector<loos::AtomicGroup> mol, vect_3d *dip0, vect_3d *dip0_mol, mat_sym_3d *pol0, mat_sym_3d *pol0_mol, FILE *file_traj, FILE *file_dip0, FILE *file_pol0, int step){
   int i=0;
   double v_oh1[3]={0.}, v_oh2[3]={0.};
+  loos::GCoord voh1, voh2;
   
-  for(i=0 ; i<(*sys).nb_mol ; i++){
-
-#ifndef YUKI
-    fprintf(file_traj,"X %9.4f %9.4f %9.4f\n",mol[i].x,mol[i].y,mol[i].z);
-#endif
-    
-    /*
-      Regular dipole moment and polarizability for rigid water molecule
-    */
-    /* Calculation of the O-H vectors*/
-    v_oh1[0]=mol[i].xH1-mol[i].xO;
-    v_oh1[1]=mol[i].yH1-mol[i].yO;
-    v_oh1[2]=mol[i].zH1-mol[i].zO;
-    norm(v_oh1,v_oh1);
-    
-    v_oh2[0]=mol[i].xH2-mol[i].xO;
-    v_oh2[1]=mol[i].yH2-mol[i].yO;
-    v_oh2[2]=mol[i].zH2-mol[i].zO;
-    norm(v_oh2,v_oh2);
-
-
-    /*==============================================
-     * Note:
-     * typ_dip 1 = atomic dipole moment
-     * typ_pol 1 = atomic polarizabilit
-     * 
-     * The atomic polarizability can be used even
-     * without atomic dipole: 1 on 3 point independents
-     * 
-     * Therefore there are 4 possibilities:
-     * at_dip+ mol_pol is not possible,
-     * all three other combinations are possible, i.e.:
-     * at_dip + at_pol, mol_dip + at_pol, mol_dip + mol_pol
-    ================================================*/
-    if((*sys).typ_dip){ /*Atomic dipole moment*/
-      if((*sys).typ_pol){ /* Atomic polarizability */
-        dippol0_atat(sys,v_oh1,v_oh2,&(dip0[3*i]),&(pol0[3*i]));
-        dip_at2mol(&(dip0[3*i]),&(dip0_mol[i]));
-        pol0_at2mol(&(pol0[3*i]),&(pol0_mol[i]));
+  for(int mol_i=0 ; mol_i < mol.size(); mol_i++){
+      
+      #ifndef YUKI
+      fprintf(file_traj,"X %9.4f %9.4f %9.4f\n",mol[mol_i].centerOfMass().x(),mol[mol_i].centerOfMass().y(),mol[mol_i].centerOfMass().z());
+      #endif
+      
+      //NOTE new temporary code, 
+      // Should be replaced with proper calculation of dipole and pol
+      // from ref molecule
+      voh1 = mol[mol_i][1]->coords() - mol[mol_i][0]->coords();
+      voh2 = mol[mol_i][2]->coords() - mol[mol_i][0]->coords();
+      voh1 /= voh1.length();
+      voh2 /= voh2.length();
+      
+      v_oh1[0] = voh1[0];
+      v_oh1[1] = voh1[1];
+      v_oh1[2] = voh1[2];
+      v_oh2[0] = voh2[0];
+      v_oh2[1] = voh2[1];
+      v_oh2[2] = voh2[2];
+      
+      /*==============================================
+       * Note:
+       * typ_dip 1 = atomic dipole moment
+       * typ_pol 1 = atomic polarizabilit
+       * 
+       * The atomic polarizability can be used even
+       * without atomic dipole: 1 on 3 point independents
+       * 
+       * Therefore there are 4 possibilities:
+       * at_dip+ mol_pol is not possible,
+       * all three other combinations are possible, i.e.:
+       * at_dip + at_pol, mol_dip + at_pol, mol_dip + mol_pol
+       = ============*===================================*/
+      if((*sys).typ_dip){ /*Atomic dipole moment*/
+          if((*sys).typ_pol){ /* Atomic polarizability */
+              dippol0_atat(sys,v_oh1,v_oh2,&(dip0[3*mol_i]),&(pol0[3*mol_i]));
+              dip_at2mol(&(dip0[3*mol_i]),&(dip0_mol[mol_i]));
+              pol0_at2mol(&(pol0[3*mol_i]),&(pol0_mol[mol_i]));
+          }
+          else{ /* Molecular polarizability */
+              std::cout << "The combination of atomic dipole with molecular polarizability is not possible!" << std::endl;
+              std::cout << "Please modify the input accordingly." << std::endl;
+              std::cout << "End of program" << std::endl;
+              exit(0);
+          }
       }
-      else{ /* Molecular polarizability */
-          std::cout << "The combination of atomic dipole with molecular polarizability is not possible!" << std::endl;
-          std::cout << "Please modify the input accordingly." << std::endl;
-          std::cout << "End of program" << std::endl;
-        exit(0);
+      else{/*Molecular dipole moment */
+          if((*sys).typ_pol){ /* Atomic polarizability */
+              dippol0_molat(sys,v_oh1,v_oh2,&(dip0[mol_i]),&(pol0[3*mol_i]));
+              dip0_mol[i]=dip0[mol_i];
+              pol0_at2mol(&(pol0[3*mol_i]),&(pol0_mol[mol_i]));
+          }
+          else{ /* Molecular polarizability */ //NOTE I should only focus on this for now
+              std::cout << "Parsing molecule " << mol_i << std::endl;
+              dippol0_molmol(sys, mol[mol_i], &(dip0[mol_i]), &(pol0[mol_i]));
+              dip0_mol[mol_i]=dip0[mol_i];
+              pol0_mol[mol_i]=pol0[mol_i];
+          }
       }
-    }
-    else{/*Molecular dipole moment */
-      if((*sys).typ_pol){ /* Atomic polarizability */
-        dippol0_molat(sys,v_oh1,v_oh2,&(dip0[i]),&(pol0[3*i]));
-        dip0_mol[i]=dip0[i];
-        pol0_at2mol(&(pol0[3*i]),&(pol0_mol[i]));
-      }
-      else{ /* Molecular polarizability */
-        dippol0_molmol(sys,v_oh1,v_oh2,&(dip0[i]),&(pol0[i]));
-        dip0_mol[i]=dip0[i];
-        pol0_mol[i]=pol0[i];
-      }
-    }
-    
+      
   }
-   
-
-#ifdef DEBUG
-  for(i=0 ; i<(*sys).nb_dip ; i++){
-    fprintf(file_dip0,"%10d %5d %9.4f %9.4f %9.4f\n",step,i,dip0[i].x(),dip0[i].y(),dip0[i].z());
+  
+  
+  #ifdef DEBUG
+  for(int i=0 ; i<(*sys).nb_dip ; i++){
+      fprintf(file_dip0,"%10d %5d %9.4f %9.4f %9.4f\n",step,i,dip0[i].x(),dip0[i].y(),dip0[i].z());
   }
-  for(i=0 ; i<(*sys).nb_pol ; i++){
-    fprintf(file_pol0,"%10d %5d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n",step,i,pol0[i].xx,pol0[i].yx,pol0[i].yy, \
-	    pol0[i].zx,pol0[i].zy,pol0[i].zz);
+  for(int i=0 ; i<(*sys).nb_pol ; i++){
+      fprintf(file_pol0,"%10d %5d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n",step,i,pol0[i].xx,pol0[i].yx,pol0[i].yy, \
+      pol0[i].zx,pol0[i].zy,pol0[i].zz);
   }
-#endif
+  #endif
   
   return;
 }
@@ -359,16 +367,19 @@ void calc_tij(sys_info *sys, std::vector<loos::AtomicGroup> mol, double *at_coor
   
   /*Calculation of the distance between the atoms i and j*/
   if(size==(*sys).nb_mol){ /*Mass center*/
-    for(i=0;i<size;i++){
-      for(j=i+1;j<size;j++){
-        x[ij] = mol[i].x - mol[j].x;
-        y[ij] = mol[i].y - mol[j].y;
-        z[ij] = mol[i].z - mol[j].z;
-        ij++;
+      loos::GCoord distance;
+      for(i=0;i<size;i++){
+          for(j=i+1;j<size;j++){
+              distance = mol[i].centerOfMass() - mol[j].centerOfMass();
+              //distance.reimage((*sys).cell); //NOTE done with pbc function below
+              x[ij] = distance.x();
+              y[ij] = distance.y();
+              z[ij] = distance.z();
+              ij++;
+          }
       }
-    }
   }
-  else{ /*Atomic*/
+  else{ /*Atomic*/ //NOTE should be killed
     for(i=0;i<size;i++){
       for(j=i+1;j<size;j++){
         x[ij] = at_coord[3*i+0] - at_coord[3*j+0];
@@ -470,10 +481,9 @@ void calc_tij(sys_info *sys, std::vector<loos::AtomicGroup> mol, double *at_coor
   XXX TRAVAIL ARBEIT WORK
   Check if it works
 */
-void scf_protection ( sys_info* sys, std::vector< loos::AtomicGroup > molol_info )
-{
-  int i=0, j=0, ij=0;
-  FILE *file_pb;
+void scf_protection(sys_info *sys, std::vector<loos::AtomicGroup> mol, vect_3d *dip0, vect_3d *dip, mat_sym_3d *pol0, mat_sym_3d *pol0_mol, mat_3d *pol, mat_sym_3d *Tij_mc, vect_3d *e_ind, vect_3d *v3_tmp, mat_3d *m3_tmp, int step){
+    int i=0, j=0, ij=0;
+    FILE *file_pb;
 
   /*Initialization*/
   init_dip_pol(dip0,dip,pol0,pol,sys);
@@ -531,7 +541,7 @@ void scf_protection ( sys_info* sys, std::vector< loos::AtomicGroup > molol_info
   fprintf(file_pb,"%d\n",(*sys).nb_mol);
   fprintf(file_pb,"i = %d , this is the positions which had some convergence problem\n",step);
   for(i=0;i<(*sys).nb_mol;i++){
-    fprintf(file_pb," X  %f %f %f\n",mol[i].x,mol[i].y,mol[i].z);
+      fprintf(file_pb," X  %f %f %f\n",mol[i].centerOfMass().x(),mol[i].centerOfMass().y(),mol[i].centerOfMass().z());
   }
   fclose(file_pb);
 }

@@ -11,13 +11,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fstream>
+#include <iomanip>
 #include "../include/main.h"
 #include "../include/dip_pol.h"
 #include "../include/my_math.h"
 #include "../include/treat_inp.h"
+#include "../include/tools.hpp"
 #include <loos.hpp>
 #include <vector>
 #include <sstream>
+
+
+using std::cout;
+using std::endl;
+using std::setw;
 
 /*==================================*/
 /*Reading the input file of the user*/
@@ -48,8 +55,8 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   sscanf(chain,"%s",(*input).namet); //Hossam
 
   loos::AtomicGroup current_frame = loos::createSystem((*input).namet); //Hossam
-  std::cout << current_frame.size() << std::endl; //Hossam
-  std::cout << current_frame.splitByMolecule().size() << std::endl; //Hossam
+  //cout << current_frame.size() << endl; //Hossam
+  //cout << current_frame.splitByMolecule().size() << endl; //Hossam
   
   /* Output file (dippol.dat) */
   //fgets(chain,CHAIN_SIZE,file);
@@ -69,7 +76,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   file >> (*sys).cell.x();
   file >> (*sys).cell.y();
   file >> (*sys).cell.z();
-  std::cout << "Box size is: " << (*sys).cell << std::endl;
+  cout << "Box size is: " << (*sys).cell << endl;
   file.ignore(1000,'\n');
 
   /*Initial / Final step*/
@@ -88,7 +95,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     //symb=fgetc(file);
     file.get(symb);
     //file.ignore(1000,'\n');
-    //std::cout << symb << std::endl;
+    //cout << symb << endl;
     //fgets(chain,CHAIN_SIZE,file);
     file.getline(chain,CHAIN_SIZE);
 
@@ -113,7 +120,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   //fgets(chain,CHAIN_SIZE,file);
   file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%s %s %s",p,q,r);
-  //std::cout << p << q << r << std::endl;
+  //cout << p << q << r << endl;
   if(strcmp(r,"X")==0){(*sys).r=0;}
   else if(strcmp(r,"Y")==0){(*sys).r=1;}
   else if(strcmp(r,"Z")==0){(*sys).r=2;}
@@ -163,7 +170,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     //fgets(chain,CHAIN_SIZE,file);
     file.getline(chain,CHAIN_SIZE);
     sscanf(chain,"%lf %lf %lf",&((*sys).M_x),&((*sys).M_y),&((*sys).M_z));
-    //std::cout << std::setw(12) << (*sys).M_x << (*sys).M_y << (*sys).M_z << std::endl;
+    //cout << std::setw(12) << (*sys).M_x << (*sys).M_y << (*sys).M_z << endl;
   }
   else{
     printf("Problem with the kind of dipole moment. Please chose \"A(a)tomic\" or \"M(m)olecular\"\nEnd of program.\n");exit(0);
@@ -182,10 +189,10 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
 	   &((*sys).AO_xx),&((*sys).AO_yy),&((*sys).AO_zz),		\
 	   &((*sys).AH_xx),&((*sys).AH_yy),&((*sys).AH_zz),		\
 	   &((*sys).AH_yx),&((*sys).AH_zx),&((*sys).AH_zy));
-    //std::cout << (*sys).AO_xx << " " << &((*sys).AO_yy) << " " << &((*sys).AO_zz) << std::endl;
+    //cout << (*sys).AO_xx << " " << &((*sys).AO_yy) << " " << &((*sys).AO_zz) << endl;
   }
   else if(symb=='m'||symb=='M'){
-      //std::cout << "Using molecular polarizability" << std::endl;
+      //cout << "Using molecular polarizability" << endl;
     if((*sys).typ_dip){
       printf("What you are doing is not possible\n");
       printf("To have the ATOMIC induced dipole moment,\n");
@@ -202,9 +209,9 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     &((*sys).A_xx),&((*sys).A_xy),&((*sys).A_xz),	\
     &((*sys).A_yx),&((*sys).A_yy),&((*sys).A_zz),	\
     &((*sys).A_zx),&((*sys).A_zy),&((*sys).A_zz));
-    //std::cout << (*sys).A_xx << " " << (*sys).A_xy << " " << (*sys).A_xz << std::endl;
-    //std::cout << (*sys).A_yx << " " << (*sys).A_yy << " " << (*sys).A_yz << std::endl;
-    //std::cout << (*sys).A_zx << " " << (*sys).A_zy << " " << (*sys).A_zz << std::endl;
+    //cout << (*sys).A_xx << " " << (*sys).A_xy << " " << (*sys).A_xz << endl;
+    //cout << (*sys).A_yx << " " << (*sys).A_yy << " " << (*sys).A_yz << endl;
+    //cout << (*sys).A_zx << " " << (*sys).A_zy << " " << (*sys).A_zz << endl;
   }
   else{
     printf("Problem with the kind of polarizability. Please chose \"A(a)tomic\" or \"M(m)olecular\"\nEnd of program.\n");exit(0);
@@ -214,7 +221,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   //fgets(chain,CHAIN_SIZE,file);
   file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%d",&((*sys).intra));
-  //std::cout << (*sys).intra << std::endl;
+  //cout << (*sys).intra << endl;
   
   //NOTE now new code to parse ref molecules.
   //NOTE should at some point create a map from the first current
@@ -225,12 +232,13 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     {
         if (line[0] == '[')
         {   
+            bool found_dip=0, found_alpha=0;
             mol_type new_type;
             std::string name = line;
             std::size_t name_end = name.find("]");
             if (name_end ==std::string::npos)
             {
-               std::cout << "Ill-formated residue name, exiting!" << std::endl;
+               cout << "Ill-formated residue name, exiting!" << endl;
                exit(0);
             }
             name = name.substr(1,name_end-1);
@@ -244,12 +252,37 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
                 double at_x, at_y, at_z;
                 file >> at_label >> at_x >> at_y >> at_z;
                 file.ignore(1000,'\n');
+                new_mol[i]->index(i+1);
+                new_mol[i]->id(i);
                 new_mol[i]->name(at_label);
                 new_mol[i]->coords(loos::GCoord(at_x,at_y,at_z));
             }
+            cout << "found molecule with name " << name << endl;
+            cout << "deducing masses from atomic labels:" << endl;
+            for (int i=0; i<new_mol.size(); i++)
+                new_mol[i]->mass(deduceMass(new_mol[i]->name()));
+            new_mol.deduceAtomicNumberFromMass(0.1);
+            cout << new_mol << endl;
+            
             new_type.ref = new_mol.copy();
-            std::cout << "found molecule with name " << name << std::endl;
-            std::cout << new_mol << std::endl;
+            new_type.ref.centerAtOrigin();
+
+            //calculate the PAS of the ref once and for all!
+            cout << "Computing principal axes of reference molecule " << name << endl;
+            
+            Eigen::Matrix3d tensor = inertia_tensor(new_type.ref);
+            Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> pas_es(tensor);
+            new_type.princ = pas_es.eigenvectors();
+            cout << "Principal axes:" << endl;
+            cout << new_type.princ << endl << endl;
+            cout << "Principal moments: ";
+            cout << pas_es.eigenvalues().transpose() << endl;
+            
+            //cout << "PAS from LOOS" << endl;
+            //std::vector<loos::GCoord> pas = new_mol.momentsOfInertia();
+            //for (int i=0; i < pas.size(); i++)
+            //    cout << pas[i] << endl;
+            
             getline(file,line);
             ss.str(line);
             std::string first;
@@ -258,32 +291,43 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
             {
                 if (first == "DIP")
                 {
-                  ss >> new_type.dip[0] >> new_type.dip[1] >> new_type.dip[2];
-                  std::cout << "found dip\n";
-                  std::cout << new_type.dip[0] << new_type.dip[1] << new_type.dip[2] << std::endl;
+                    found_dip = 1;
+                    ss >> new_type.dip[0] >> new_type.dip[1] >> new_type.dip[2];
+                    cout << "Dipole: " << setw(10) << new_type.dip[0]
+                    << setw(10) << new_type.dip[1]
+                    << setw(10) << new_type.dip[2] << endl;
                 }
                 else if ( first == "ALPHA")
                 {
+                    found_alpha = 1;
                     ss >> new_type.alpha[0][0] >> new_type.alpha[0][1] >> new_type.alpha[0][2]
-                         >> new_type.alpha[1][0] >> new_type.alpha[1][1] >> new_type.alpha[1][2]
-                         >> new_type.alpha[2][0] >> new_type.alpha[2][1] >> new_type.alpha[2][2];
-                    std::cout << "found alpha\n";
+                    >> new_type.alpha[1][0] >> new_type.alpha[1][1] >> new_type.alpha[1][2]
+                    >> new_type.alpha[2][0] >> new_type.alpha[2][1] >> new_type.alpha[2][2];
+                    new_type.alpha_m << new_type.alpha[0][0] , new_type.alpha[0][1] , new_type.alpha[0][2]
+                    , new_type.alpha[1][0] , new_type.alpha[1][1] , new_type.alpha[1][2]
+                    , new_type.alpha[2][0] , new_type.alpha[2][1] , new_type.alpha[2][2];
+                    cout << "Alpha\n";
                 }
                 else if (first == "BETA" )
                 {
-                   std::cout << "found beta\n";
+                    cout << "found beta\n";
                 }
                 getline(file,line);
                 ss.str(line);
                 ss >> first;
             }
+            if (!found_dip || !found_alpha)
+            {
+                cout << "Dipole or alpha tensor not provided, exiting!" << endl;
+                exit(0);
+            }
             (*sys).all_mol_types[name] = new_type;
-            std::cout << std::endl;
+            cout << endl;
         }
     }
-
-    //std::cout << (*sys).all_mol_types["WAT"].dip[2] << std::endl;
-    //std::cout << (*sys).all_mol_types["CHL"].dip[2] << std::endl;
+    
+    //cout << (*sys).all_mol_types["WAT"].dip[2] << endl;
+    //cout << (*sys).all_mol_types["CHL"].dip[2] << endl;
     file.close();
 }
 
@@ -314,9 +358,13 @@ void trajectory(sys_info *sys, input_info input, char *argv[]) {
     
     //Open the traj and topology as loos objects
     loos::AtomicGroup topology = loos::createSystem(input.namet); //Hossam
-    std::cout << topology.size() << std::endl; //Hossam
-    //std::cout << topology.splitByMolecule().size() << std::endl; //Hossam
+    topology.periodicBox(sys->cell);
+    //cout << topology.size() << endl; //Hossam
+    //cout << topology.splitByMolecule().size() << endl; //Hossam
     loos::pTraj traj = createTrajectory(input.namei,topology);//Hossam
+    traj->readFrame(0);
+    traj->updateGroupCoords(topology);
+    std::vector<loos::AtomicGroup> all_mols = topology.splitByMolecule();
     
     //H FOPEN_SAFE(filei,namei,"r");
     FOPEN_SAFE(fileo,input.nameo,"w+");
@@ -335,15 +383,9 @@ void trajectory(sys_info *sys, input_info input, char *argv[]) {
     {
         traj->readFrame(frame_i);
         traj->updateGroupCoords(topology);
-    //H while(fscanf(filei,"%d",&((*sys).nb_at)) != EOF && !end_read){
-    //H    /*Comment line reading*/
-    //H    fscanf(filei,"%s",chain);/* Pass the i */
-    //H    fscanf(filei,"%s",chain);/* Pass the = */
-    //H    fscanf(filei,"%d",&step);
-    //H    fscanf(filei,"%s",chain);/*Pass the ,*/
-    //H    fscanf(filei,"%s",chain);/*Pass the time*/
-    //H    fscanf(filei,"%s",chain);/*Pass the =*/
-    //H    fscanf(filei,"%lf",&time);
+        //NOTE probably the culprit, Kill it!
+        at_coord = topology.coordsAsVector().data();
+    
         if (frame_i == input.stepi)
         {
             
@@ -431,74 +473,38 @@ void trajectory(sys_info *sys, input_info input, char *argv[]) {
                 fprintf(file_Tij_at,"#Record_number Mol_i Mol_j Tij_xx Tij_yx Tij_yy Tij_zx Tij_zy Tij_zz\n");
             }
             #endif
-        //H }     
         }
+        if(frame_i>=input.stepf){end_read=1;}
         
+        #ifndef YUKI
+        fprintf(file_traj,"%d\n",(*sys).nb_mol);
+        fprintf(file_traj,"\n");
+        #endif
+      
         
-        //H if(frame_i>=input.stepf){end_read=1;}
-        //H fgets(chain,CHAIN_SIZE,filei);/* Read the end of the line */
-        
-        std::vector<loos::AtomicGroup> all_mols = topology.splitByMolecule();
         for (int mol_i = 0; mol_i < all_mols.size(); mol_i++)
         {
             all_mols[mol_i].reimage();
-            std::cout << "reimaged molecule " << mol_i << " with " << (*sys).cell << std::endl;
         }
  
-//H         /*Body read if we are after the starting step*/
-//H         if(start_read){
-//H             #ifndef YUKI
-//H             fprintf(file_traj,"%d\n",(*sys).nb_mol);
-//H             fprintf(file_traj,"i = %d , time = %f . Only the mass center position is written.\n",step,time);
-//H             #endif
-//H             
-//H             for(i=0;i<(*sys).nb_mol;i++){
-//H                 for(j=0;j<(*sys).at_p_mol;j++){
-//H                     fscanf(filei,"%s %lf %lf %lf",chain,				\
-//H                     (double *) &(mol[i])+(*sys).order[j],			\
-//H                     (double *) &(mol[i])+(*sys).order[j]+1,		\
-//H                     (double *) &(mol[i])+(*sys).order[j]+2);
-//H                     
-//H                 }
-//H                 H pbc_mol((*sys).cell,&(mol[i])); /*Mass center + centering*/
-//H                 
-//H                 #ifdef DEBUG
-//H                 fprintf(file_debug,"%10d %10d %5d 1 %f %f %f\n",step,(*sys).step_max,i,mol[i].xO ,mol[i].yO ,mol[i].zO );
-//H                 fprintf(file_debug,"%10d %10d %5d 2 %f %f %f\n",step,(*sys).step_max,i,mol[i].xH1,mol[i].yH1,mol[i].zH1);
-//H                 fprintf(file_debug,"%10d %10d %5d 3 %f %f %f\n",step,(*sys).step_max,i,mol[i].xH2,mol[i].yH2,mol[i].zH2);
-//H                 #endif
-//H             }
-            
-            
-            /*=====================================================
-             Storage of th*e coordinates into an array of double
-             This array will have (sooner or later to replace the
-             unneficient structure "mol")
-             ==================================================*/
-            //H for(i=0;i<(*sys).nb_mol;i++){
-            //H   at_coord[9*i+0]=mol[i].xO ; at_coord[9*i+1]=mol[i].yO ; at_coord[9*i+2]=mol[i].zO ; 
-            //H   at_coord[9*i+3]=mol[i].xH1; at_coord[9*i+4]=mol[i].yH1; at_coord[9*i+5]=mol[i].zH1;
-            //H   at_coord[9*i+6]=mol[i].xH2; at_coord[9*i+7]=mol[i].yH2; at_coord[9*i+8]=mol[i].zH2;
-            //H }
-            
-            //at_coord = &(topology.coordsAsVector()[0]);
-            at_coord = topology.coordsAsVector().data();
-            
-            /*================================================================================
-             Calculation of* the complete dipole moment / polarizability (permanent + induced)
-             ================================================================================*/
-            val_init(sys,all_mols,dip0,dip0_mol,pol0,pol0_mol,file_traj,file_dip0,file_pol0,step);/*dip0, pol0*/
-            comp_dip_pol(sys,all_mols,at_coord,dip0,dip0_mol,dip,dip_mol,pol0,pol0_mol,pol,pol_mol,e_ind,a_ind,v3_tmp,m3_tmp,Tij_mc,Tij_at,x,y,z,r,fthole,fileo,file_Tij_mc,file_Tij_at,file_dip,file_pol,file_dip_ind,file_pol_ind,step);/*Induction*/
-            
-            
-            
-            (*sys).step_max++; /* Real number of steps recorded (can be lower than stepf-stepi+1) */
-        }//end loop over trajectory
-        else{/*Passing the lines before stepi*/
-            for(i=1;i<=(*sys).nb_at;i++){
-                fgets(chain,CHAIN_SIZE,filei);
-            }
-        }
+ 
+         /*================================================================================
+          * Calculation of* the complete dipole moment / polarizability (permanent + induced)
+          *================================================================================*/
+         val_init(sys,all_mols,dip0,dip0_mol,pol0,pol0_mol,file_traj,file_dip0,file_pol0,step);/*dip0, pol0*/
+         comp_dip_pol(sys,all_mols,at_coord,dip0,dip0_mol,dip,dip_mol,pol0,pol0_mol,pol,pol_mol,e_ind,a_ind,v3_tmp,m3_tmp,Tij_mc,Tij_at,x,y,z,r,fthole,fileo,file_Tij_mc,file_Tij_at,file_dip,file_pol,file_dip_ind,file_pol_ind,step);/*Induction*/
+         
+         (*sys).step_max++; /* Real number of steps recorded (can be lower than stepf-stepi+1) */
+    }//end loop over trajectory
+    
+    //NOTE got this else without a preceding if
+    // Okay got it, no need, loos is taking care of
+    // finding the correct start frame and skippin preceding ones
+    //else{/*Passing the lines before stepi*/
+    //    for(i=1;i<=(*sys).nb_at;i++){
+    //        fgets(chain,CHAIN_SIZE,filei);
+    //    }
+    //}
     //} //NOTE found extra brace here, check if something is wrong
     
     /* Release the memory */
@@ -523,7 +529,7 @@ void trajectory(sys_info *sys, input_info input, char *argv[]) {
     free(fthole);
     if((*sys).typ_dip + (*sys).typ_pol){free(Tij_at);}
     
-    fclose(filei);
+    //fclose(filei);
     fclose(fileo);
     #ifndef YUKI
     fclose(file_traj);

@@ -6,59 +6,114 @@
 #include <math.h>
 #include "../include/main.h"
 #include "../include/my_math.h"
+#include "../include/tools.hpp"
+
+using std::cout;
+using std::endl;
 
 /*=================================================================
   This subroutine calculates the permanent molecular dipole moment
   and polarizability
   =================================================================*/
-void dippol0_molmol(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d *dip0, mat_sym_3d *pol0){
-  double v1[3]={0.}, v2[3]={0.}, v3[3]={0.};
+// void dippol0_molmol(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d *dip0, mat_sym_3d *pol0){
+//   double v1[3]={0.}, v2[3]={0.}, v3[3]={0.};
+// 
+//   /*Calculation of the direction cosine matrix*/
+//   /*  Projection of the molecular axis on the lab referential
+//       All the vector are normalized
+//       v3=first bissector of H2O
+//       v2=vector out of plane (vectorial product of bissector with one OH bond)
+//       v1=second vector in the molecular plane (vectorial procuct of the first two)*/
+// 
+//   Hossam
+//   modify definition of bisector to allow for flexible molecules
+// 
+//   const double doh1= sqrt(v_oh1[0]*v_oh1[0]+v_oh1[1]*v_oh1[1]+v_oh1[2]*v_oh1[2]);
+//   const double doh2= sqrt(v_oh2[0]*v_oh2[0]+v_oh2[1]*v_oh2[1]+v_oh2[2]*v_oh2[2]);
+//   
+//   v3[0]= doh1*v_oh2[0] + doh2*v_oh1[0];
+//   v3[1]= doh1*v_oh2[1] + doh2*v_oh1[1];
+//   v3[2]= doh1*v_oh2[2] + doh2*v_oh1[2];
+//   v3[0]=v_oh2[0]+v_oh1[0];
+//   v3[1]=v_oh2[1]+v_oh1[1];
+//   v3[2]=v_oh2[2]+v_oh1[2];
+//   norm(v3,v3);
+//   cross_p(v3,v_oh1,v2);
+//   norm(v2,v2);
+//   cross_p(v2,v3,v1);
+//       
+//   /*
+//     Calculation of the dipole moment (gas phase-like)
+//     Initially it is on the bissector
+//   */
+//   (*dip0).x()=(*sys).M_z*v3[0];
+//   (*dip0).y()=(*sys).M_z*v3[1];
+//   (*dip0).z()=(*sys).M_z*v3[2];
+// 
+//   /*
+//     Calculation of the polarizability tensor (gas phase-like)
+//     Initially it is on the bissector
+//   */
+//   (*pol0).xx = v1[0]*v1[0]*(*sys).A_xx + v2[0]*v2[0]*(*sys).A_yy + v3[0]*v3[0]*(*sys).A_zz;
+//   (*pol0).yx = v1[1]*v1[0]*(*sys).A_xx + v2[1]*v2[0]*(*sys).A_yy + v3[1]*v3[0]*(*sys).A_zz;
+//   (*pol0).yy = v1[1]*v1[1]*(*sys).A_xx + v2[1]*v2[1]*(*sys).A_yy + v3[1]*v3[1]*(*sys).A_zz;
+//   (*pol0).zx = v1[2]*v1[0]*(*sys).A_xx + v2[2]*v2[0]*(*sys).A_yy + v3[2]*v3[0]*(*sys).A_zz;
+//   (*pol0).zy = v1[2]*v1[1]*(*sys).A_xx + v2[2]*v2[1]*(*sys).A_yy + v3[2]*v3[1]*(*sys).A_zz;
+//   (*pol0).zz = v1[2]*v1[2]*(*sys).A_xx + v2[2]*v2[2]*(*sys).A_yy + v3[2]*v3[2]*(*sys).A_zz;
+// }
+void dippol0_molmol(sys_info *sys, const loos::AtomicGroup molecule, vect_3d *dip0, mat_sym_3d *pol0){
+    
+    //cout << molecule << endl;
+    //loos::AtomicGroup ref = sys->all_mol_types[molecule[0]->resname()].ref.copy();
+    //ref.centerAtOrigin();
+    Eigen::Matrix3d pa_ref = sys->all_mol_types[molecule[0]->resname()].princ;    
 
-  /*Calculation of the direction cosine matrix*/
-  /*  Projection of the molecular axis on the lab referential
-      All the vector are normalized
-      v3=first bissector of H2O
-      v2=vector out of plane (vectorial product of bissector with one OH bond)
-      v1=second vector in the molecular plane (vectorial procuct of the first two)*/
+    loos::AtomicGroup temp = molecule.copy();
+    temp.mergeImage();
+    temp.centerAtOrigin();
+    Eigen::Matrix3d tensor = inertia_tensor(temp);
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> pas_es(tensor);
+    Eigen::Matrix3d pa_mol = pas_es.eigenvectors();
+    //cout << "values: " << endl;
+    //cout << pas_es.eigenvalues().transpose() << endl << endl;
+    //cout << "vectors: " << endl;
+    //cout << pas_es.eigenvectors()<< endl << endl;
+    
+    Eigen::Matrix3d dcm;
+    dcm << -1*pa_ref.col(0).dot(pa_mol.col(0)),
+    -1*pa_ref.col(0).dot(pa_mol.col(1)),
+    -1*pa_ref.col(0).dot(pa_mol.col(2)),
+    -1*pa_ref.col(1).dot(pa_mol.col(0)),
+    -1*pa_ref.col(1).dot(pa_mol.col(1)),
+    -1*pa_ref.col(1).dot(pa_mol.col(2)),
+    pa_ref.col(2).dot(pa_mol.col(0)),
+    pa_ref.col(2).dot(pa_mol.col(1)),
+    pa_ref.col(2).dot(pa_mol.col(2));
+    
 
-  //Hossam
-  // modify definition of bisector to allow for flexible molecules
-
-  const double doh1= sqrt(v_oh1[0]*v_oh1[0]+v_oh1[1]*v_oh1[1]+v_oh1[2]*v_oh1[2]);
-  const double doh2= sqrt(v_oh2[0]*v_oh2[0]+v_oh2[1]*v_oh2[1]+v_oh2[2]*v_oh2[2]);
-  
-  v3[0]= doh1*v_oh2[0] + doh2*v_oh1[0];
-  v3[1]= doh1*v_oh2[1] + doh2*v_oh1[1];
-  v3[2]= doh1*v_oh2[2] + doh2*v_oh1[2];
-  //v3[0]=v_oh2[0]+v_oh1[0];
-  //v3[1]=v_oh2[1]+v_oh1[1];
-  //v3[2]=v_oh2[2]+v_oh1[2];
-  norm(v3,v3);
-  cross_p(v3,v_oh1,v2);
-  norm(v2,v2);
-  cross_p(v2,v3,v1);
-      
-  /*
-    Calculation of the dipole moment (gas phase-like)
-    Initially it is on the bissector
-  */
-  (*dip0).x()=(*sys).M_z*v3[0];
-  (*dip0).y()=(*sys).M_z*v3[1];
-  (*dip0).z()=(*sys).M_z*v3[2];
-
-  /*
-    Calculation of the polarizability tensor (gas phase-like)
-    Initially it is on the bissector
-  */
-  (*pol0).xx = v1[0]*v1[0]*(*sys).A_xx + v2[0]*v2[0]*(*sys).A_yy + v3[0]*v3[0]*(*sys).A_zz;
-  (*pol0).yx = v1[1]*v1[0]*(*sys).A_xx + v2[1]*v2[0]*(*sys).A_yy + v3[1]*v3[0]*(*sys).A_zz;
-  (*pol0).yy = v1[1]*v1[1]*(*sys).A_xx + v2[1]*v2[1]*(*sys).A_yy + v3[1]*v3[1]*(*sys).A_zz;
-  (*pol0).zx = v1[2]*v1[0]*(*sys).A_xx + v2[2]*v2[0]*(*sys).A_yy + v3[2]*v3[0]*(*sys).A_zz;
-  (*pol0).zy = v1[2]*v1[1]*(*sys).A_xx + v2[2]*v2[1]*(*sys).A_yy + v3[2]*v3[1]*(*sys).A_zz;
-  (*pol0).zz = v1[2]*v1[2]*(*sys).A_xx + v2[2]*v2[2]*(*sys).A_yy + v3[2]*v3[2]*(*sys).A_zz;
+    Eigen::Vector3d rot_dip = dcm * gcoord_to_eigenv(sys->all_mol_types[molecule[0]->resname()].dip);
+    (*dip0).x()=rot_dip(0);
+    (*dip0).y()=rot_dip(1);
+    (*dip0).z()=rot_dip(2);
+    
+    //std::cout << "After alignment" << std::endl;
+    //for (uint i=0; i< ref.size(); i++)
+    //cout << (dcm * gcoord_to_eigenv(ref[i]->coords())).transpose() << endl;
+    //cout << rot_dip.transpose() << endl << endl;
+    //writexyz(temp,cout);//std::cout << molecule << std::endl;
+    
+    //Now transform alpha
+    Eigen::Matrix3d alpha_rot = dcm * sys->all_mol_types[molecule[0]->resname()].alpha_m * dcm.transpose();
+    (*pol0).xx = alpha_rot(0,0);
+    (*pol0).yx = alpha_rot(1,0);
+    (*pol0).yy = alpha_rot(1,1);
+    (*pol0).zx = alpha_rot(2,0);
+    (*pol0).zy = alpha_rot(2,1);
+    (*pol0).zz = alpha_rot(2,2);
+    
+    //Now transform beta
+    //NOTE to be implemented
 }
-
-
 
 
 /*================================================================
@@ -240,5 +295,3 @@ void pol_at2mol(mat_3d *pol, mat_3d *pol_mol){
   (*pol_mol).zy = (*(pol + 0)).zy + (*(pol + 1)).zy + (*(pol + 2)).zy;
   (*pol_mol).zz = (*(pol + 0)).zz + (*(pol + 1)).zz + (*(pol + 2)).zz;
 }
-
-
