@@ -15,15 +15,15 @@
 #   polarizability, hyperpolarizability, together with the molecular coordinate frame
 #   that corresponds to these tensors.
 #
-#2. (Not yet implemented) Use the extended dipole model as suggested by Torii in
+# ---------   TO BE DONE  ------------------
+#2. Implement Torii's the extended dipole model:
 #   Chem. Phys. Lett., 353, 431, 2002 (See the beta-mu term in eq. 5)
 #
-#3. (Not-yet implemented) Periodic boundary conditions: Interactions with molecules
-#    beyond the cutoff is now calculated using periodic boundary conditions. See:
+#3. Periodic boundary conditions: Interactions with molecules:
 #   - A. Aguado and P. A. Madden, J. Chem. Phys. 119, 7471, 2003
 #   - T. Laino and J. Hutter, J. Chem. Phys. 129, 074102, 2008
 #
-#4. (Not-yet implemented): Solving the SCF on a grid by a collocation of Legendre functions.
+#4. Solving the SCF on a grid by a collocation of Legendre functions.
 #
 #
 #To handle psf topologies, the code now requires linking against the loos library,
