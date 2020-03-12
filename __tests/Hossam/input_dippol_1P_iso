@@ -1,0 +1,28 @@
+ordered_by_connectivity.xyz          #File name of the pos file
+ordered_by_connectivity.xyz.psf      #topology, must include atomic masses!
+dippol_1P_iso.dat                    #Name of the output file
+center_mass_1P_iso.xyz               #Output file center of mass
+15.6404 15.6404 15.6404              #Parameters of the box
+0 1  	                             #Initial and final step of interest
+3 		                     #Number of atom to describe the molecule
+O		                     #Atom 1: Only the first character is important
+H		                     #Atom 2: Only the first character is important
+H		                     #Atom 3: Only the first character is important
+S S Z                                #Polarization of the light: X, Y, Z, S (S=(X+Y)/2)
+7                                    #Cutoff for the dipole field tensor (over this value it is set to 0)
+0                                    #Activation of the exponential Thole damping factor (0=off) Chem. Phys., 59, (1981), 341-350
+mol                                  #Atomic (3 points) or Molecular (1 point) dipole moment (only the first character is important)
+0 0 0.728                            #Dipole moment of the molecule (X Y Z in the molecular frame)
+mol                                  #Atomic (3 points) or Molecular (1 point) dipole moment
+1.470  0  0  0 1.381 0. 0. 0. 1.420    #Polarizability tensor (bottom part: xx, yx, yy, zx, zy, zz)
+1                                    #Intramolecular DID for 3 points model (0=no). Useless if "molecular"
+
+
+[WAT]                                   #molecule name as in psf file, _between_square_brackets_and_without_spaces!
+3                                       #number of atoms
+O  0         -0.0669856     0.00000     #coordinates
+H  0.768309   0.531635      0.00000     #...
+H -0.768234   0.531694      0.00000     #...
+DIP     0.0 0.727 0.0                   # dipole: x y z
+ALPHA   1.470 0 0 0 1.381 0 0 0 1.420   # polarizability tensor: xx xy xz yx yy yz zx zy zz
+END                                     #Don't forget this!
