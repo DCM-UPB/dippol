@@ -482,6 +482,7 @@ void trajectory(sys_info *sys, input_info input, char *argv[]) {
         #endif
       
         
+        #pragma omp parallel for
         for (int mol_i = 0; mol_i < all_mols.size(); mol_i++)
         {
             all_mols[mol_i].reimage();

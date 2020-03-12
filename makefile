@@ -3,10 +3,11 @@
 #=================================
 #DEBUG='warning'
 #YUKI='-D YUKI'
+OMP=-fopenmp
 ifeq ($(DEBUG),'warning')
-CFLAGS= -Wall -Wextra -Wno-deprecated -O2 -I$(INC) -I$(INC_LOOS) -D DEBUG $(YUKI)#Compiler flags for debug run
+CFLAGS= -Wall -Wextra -Wno-deprecated -O2 -I$(INC) -I$(INC_LOOS) -D DEBUG $(YUKI) $(OMP)#Compiler flags for debug run
 else 
-CFLAGS= -O2 -Wno-deprecated -I$(INC) -I$(INC_LOOS) $(YUKI) #Compiler flags with optimization
+CFLAGS= -O2 -Wno-deprecated -I$(INC) -I$(INC_LOOS) $(YUKI) $(OMP) #Compiler flags with optimization
 endif
 LDFLAGS= -lm -Wl,-rpath=${LOOS} -L${LOOS} -lloos #Extra libraries (math.h,...)
 

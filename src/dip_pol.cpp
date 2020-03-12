@@ -28,11 +28,18 @@ void val_init(sys_info *sys, std::vector<loos::AtomicGroup> mol, vect_3d *dip0, 
   double v_oh1[3]={0.}, v_oh2[3]={0.};
   loos::GCoord voh1, voh2;
   
+  #ifndef YUKI
+  for(int mol_i=0 ; mol_i < mol.size(); mol_i++){
+      fprintf(file_traj,"X %9.4f %9.4f %9.4f\n",mol[mol_i].centerOfMass().x(),mol[mol_i].centerOfMass().y(),mol[mol_i].centerOfMass().z());
+  }
+  #endif
+  
+  #pragma omp parallel for
   for(int mol_i=0 ; mol_i < mol.size(); mol_i++){
       
-      #ifndef YUKI
-      fprintf(file_traj,"X %9.4f %9.4f %9.4f\n",mol[mol_i].centerOfMass().x(),mol[mol_i].centerOfMass().y(),mol[mol_i].centerOfMass().z());
-      #endif
+      //#ifndef YUKI
+      //fprintf(file_traj,"X %9.4f %9.4f %9.4f\n",mol[mol_i].centerOfMass().x(),mol[mol_i].centerOfMass().y(),mol[mol_i].centerOfMass().z());
+      //#endif
       
       //NOTE new temporary code, 
       // Should be replaced with proper calculation of dipole and pol
@@ -62,6 +69,9 @@ void val_init(sys_info *sys, std::vector<loos::AtomicGroup> mol, vect_3d *dip0, 
        * all three other combinations are possible, i.e.:
        * at_dip + at_pol, mol_dip + at_pol, mol_dip + mol_pol
        = ============*===================================*/
+      //NOTE 
+      //DANGER omp not tested with anything besides mol/mol!!!
+      //NOTE
       if((*sys).typ_dip){ /*Atomic dipole moment*/
           if((*sys).typ_pol){ /* Atomic polarizability */
               dippol0_atat(sys,v_oh1,v_oh2,&(dip0[3*mol_i]),&(pol0[3*mol_i]));
