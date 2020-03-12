@@ -1,1 +1,0 @@
-g++ -o dippol dip_pol.cpp  main.cpp  mol_atom.cpp  my_math.cpp  treat_inp.cpp  write.cpp -I/home/hossame/test_dippol/dippol_hossam/include -lm -I /home/hossame/.lib/loos/include -Wl,-rpath=/home/hossame/.lib/loos/lib -L /home/hossame/.lib/loos/lib -lloos

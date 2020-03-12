@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "../include/main.h"
-#include "../include/treat_inp.h"
+#include "main.h"
+#include "treat_inp.h"
 #include <loos.hpp>
 //#include <boost/program_options.hpp>
 //#include <boost/filesystem.hpp>

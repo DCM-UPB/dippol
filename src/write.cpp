@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "../include/main.h"
+#include <main.h>
 
 
 /* Correlation function <a(t0+t).m(t0)> */

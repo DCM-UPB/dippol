@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "../include/main.h"
-#include "../include/my_math.h"
-#include "../include/tools.hpp"
+#include "main.h"
+#include "my_math.h"
+#include "tools.hpp"
 
 using std::cout;
 using std::endl;

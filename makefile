@@ -4,28 +4,32 @@
 #DEBUG='warning'
 #YUKI='-D YUKI'
 ifeq ($(DEBUG),'warning')
-CFLAGS= -Wall -Wextra -O0 -I$(INC_DIR) -D DEBUG $(YUKI)#Compiler flags for debug run
+CFLAGS= -Wall -Wextra -Wno-deprecated -O2 -I$(INC) -I$(INC_LOOS) -D DEBUG $(YUKI)#Compiler flags for debug run
 else 
-CFLAGS= -O2 -I$(INC_DIR) $(YUKI)#Compiler flags with optimization
+CFLAGS= -O2 -Wno-deprecated -I$(INC) -I$(INC_LOOS) $(YUKI) #Compiler flags with optimization
 endif
-LDFLAGS= -lm #Extra libraries (math.h,...)
+LDFLAGS= -lm -Wl,-rpath=${LOOS} -L${LOOS} -lloos #Extra libraries (math.h,...)
+
+#g++ -Wno-deprecated -o dippol dip_pol.cpp  main.cpp  mol_atom.cpp  my_math.cpp  treat_inp.cpp  write.cpp tools.cpp -I/home/hossam/code/dippol/include -lm -I /home/hossam/.lib/loos/include -Wl,-rpath=/home/hossam/.lib/loos -L /home/hossam/.lib/loos -lloos
 
 #=========
 #Variables
 #=========
-#wildcard  = requiered for wildcard uses in variables
+LOOS= /home/hossam/.lib/loos
+#wildcard  = required for wildcard uses in variables
 #addprefix = The value of prefix is prepended to the front of each individual name 
 #notdir = If the file name contains no slash, it is left unchanged. Otherwise, everything through the last slash is removed from it.
 SHELL=bash
-FC=gcc
+FC=g++
 EXEC=dippol
 SRC_DIR=src
-INC_DIR=include
+INC=include
+INC_LOOS=${LOOS}/include
 OBJ_DIR=obj
 SAFE_DIR=safe
 PWD=$(shell pwd)
-SRC= $(wildcard $(addprefix $(SRC_DIR)/, *.c)) #List of the sources
-OBJ= $(addprefix $(OBJ_DIR)/,$(notdir $(SRC:.c=.o))) #List of the object files 
+SRC= $(wildcard $(addprefix $(SRC_DIR)/, *.cpp)) #List of the sources
+OBJ= $(addprefix $(OBJ_DIR)/,$(notdir $(SRC:.cpp=.o))) #List of the object files 
 
 #==========
 #C commands
@@ -37,18 +41,21 @@ OBJ= $(addprefix $(OBJ_DIR)/,$(notdir $(SRC:.c=.o))) #List of the object files
 
 #Creation of the execuatble
 $(EXEC): $(OBJ) #If target (main) is older than $(OBJ)
-	@$(FC) -o $@ $(OBJ) $(CFLAGS) $(LDFLAGS)
+	 $(FC) -o $@ $(OBJ) $(CFLAGS) $(LDFLAGS)
+
 
 #Creation of the objects
-#Produce .o files if .c or .h changed
-#%.o: %.c %.h
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/%.h $(INC_DIR)/main.h
-	@$(FC) -c -o $@ $< $(CFLAGS)
+#Produce .o files if .cpp or .h changed
+#%.o: %.cpp %.hpp %.h
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(INC)/*.h $(INC)/*.hpp
+	$(FC) -c -o $@ $< $(CFLAGS)
 
+#g++ -c src/write.cpp -o write.o -Iinclude -I/home/hossam/.lib/loos/include
 #============
 #============
 #Rebuild the dependances (even if another file is name clean)
-.PHONY: clean 
+.PHONY: clean
+
 
 #Remove the intermediate files
 clean: 
@@ -60,5 +67,5 @@ very_clean:
 
 #Create tag files to navigate with emacs
 tag:
-	etags $(SRC_DIR)/*.c -o $(SRC_DIR)/TAGS
+	etags $(SRC_DIR)/*.cpp -o $(SRC_DIR)/TAGS
 

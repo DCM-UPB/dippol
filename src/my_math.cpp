@@ -4,8 +4,8 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "../include/main.h"
-#include "../include/my_math.h"
+#include "main.h"
+#include "my_math.h"
 
 /* Cross product */
 void cross_p(double *v1, double *v2, double *v3){

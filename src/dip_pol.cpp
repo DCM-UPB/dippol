@@ -10,11 +10,11 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <math.h>
-#include "../include/main.h"
-#include "../include/dip_pol.h"
-#include "../include/mol_atom.h"
-#include "../include/my_math.h"
-#include "../include/write.h"
+#include "main.h"
+#include "dip_pol.h"
+#include "mol_atom.h"
+#include "my_math.h"
+#include "write.h"
 
 using std::cout;
 using std::endl;

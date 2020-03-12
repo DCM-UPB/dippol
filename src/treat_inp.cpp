@@ -12,11 +12,11 @@
 #include <string.h>
 #include <fstream>
 #include <iomanip>
-#include "../include/main.h"
-#include "../include/dip_pol.h"
-#include "../include/my_math.h"
-#include "../include/treat_inp.h"
-#include "../include/tools.hpp"
+#include "main.h"
+#include "dip_pol.h"
+#include "my_math.h"
+#include "treat_inp.h"
+#include "tools.hpp"
 #include <loos.hpp>
 #include <vector>
 #include <sstream>
