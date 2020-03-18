@@ -15,11 +15,13 @@
 #   polarizability, hyperpolarizability, together with the molecular coordinate frame
 #   that corresponds to these tensors.
 #
+#2. OMP parallelization (In progress)
+#
 # ---------   TO BE DONE  ------------------
-#2. Implement Torii's the extended dipole model:
+#2. Implement Torii's extended dipole model:
 #   Chem. Phys. Lett., 353, 431, 2002 (See the beta-mu term in eq. 5)
 #
-#3. Periodic boundary conditions: Interactions with molecules:
+#3. Periodic boundary conditions for dipolar interactions:
 #   - A. Aguado and P. A. Madden, J. Chem. Phys. 119, 7471, 2003
 #   - T. Laino and J. Hutter, J. Chem. Phys. 129, 074102, 2008
 #
