@@ -16,7 +16,7 @@
 
 constexpr unsigned int str2int(const char* str, int h);
 
-const double deduceMass(const std::string name);
+double deduceMass(const std::string name);
 
 Eigen::Vector3d gcoord_to_eigenv(const loos::GCoord in);
 
@@ -26,5 +26,6 @@ Eigen::Matrix3d inertia_tensor(const loos::AtomicGroup group);
 
 void writexyz(const loos::AtomicGroup group, std::ostream &output);
 
+// Eigen::Matrix3d align(loos::AtomicGroup ref, loos::AtomicGroup mol, Eigen::Matrix<double,Eigen::Dynamic,3> w);
 #endif
 

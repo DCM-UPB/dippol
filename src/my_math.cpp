@@ -54,10 +54,10 @@ void pbc(vect_3d cell, double *x, double *y, double *z){
 
 
 /*Multiplication of a symmetric 3D matrix and a 3D vector*/
-void mult_msym_v_3d(mat_sym_3d *m, vect_3d *vin, vect_3d *vout){
-  (*vout).x() = (*m).xx*(*vin).x() + (*m).yx*(*vin).y() + (*m).zx*(*vin).z();
-  (*vout).y() = (*m).yx*(*vin).x() + (*m).yy*(*vin).y() + (*m).zy*(*vin).z();
-  (*vout).z() = (*m).zx*(*vin).x() + (*m).zy*(*vin).y() + (*m).zz*(*vin).z();
+void mult_msym_v_3d(mat_sym_3d *m, vect_3d &vin, vect_3d &vout){
+  vout.x() = (*m).xx*vin.x() + (*m).yx*vin.y() + (*m).zx*vin.z();
+  vout.y() = (*m).yx*vin.x() + (*m).yy*vin.y() + (*m).zy*vin.z();
+  vout.z() = (*m).zx*vin.x() + (*m).zy*vin.y() + (*m).zz*vin.z();
 }
 
 
@@ -135,6 +135,23 @@ void rot_dip0_H(sys_info *sys, vect_3d *dip0, double *v3){
   (*dip0).z()= v3[2]*(*sys).MH_z ;/*Z*/
 
 }
+
+
+Eigen::Matrix3d m_to_eigen(mat_sym_3d in){
+ Eigen::Matrix3d out;
+ out << in.xx, in.yx, in.zx,
+ in.yx, in.yy, in.zy,
+ in.zx, in.zy, in.zz;
+ return out;
+}
+
+Eigen::Matrix3d m_to_eigen(mat_3d in){
+    Eigen::Matrix3d out;
+    out << in.xx, in.xy, in.xx,
+    in.yx, in.yy, in.yz,
+    in.zx, in.zy, in.zz;
+    return out;
+}   
 
 
 

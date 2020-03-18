@@ -138,7 +138,7 @@ typedef struct sys_info
   int at_p_mol,nb_at,nb_mol,nb_point,nb_dip,nb_pol,step_max;
   double cutoff;
   int p,q,r;
-  int *order;
+  //int *order;
   int thole, intra, typ_dip, typ_pol;
   double M_x,M_y,M_z,A_xx,A_xy,A_xz,A_yx,A_yy,A_yz,A_zx,A_zy,A_zz;
   double MO_z,AO_xx,AO_yy,AO_zz;

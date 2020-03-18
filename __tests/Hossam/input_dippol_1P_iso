@@ -9,7 +9,7 @@ O		                     #Atom 1: Only the first character is important
 H		                     #Atom 2: Only the first character is important
 H		                     #Atom 3: Only the first character is important
 S S Z                                #Polarization of the light: X, Y, Z, S (S=(X+Y)/2)
-7                                    #Cutoff for the dipole field tensor (over this value it is set to 0)
+7.0                                  #Cutoff for the dipole field tensor (over this value it is set to 0)
 0                                    #Activation of the exponential Thole damping factor (0=off) Chem. Phys., 59, (1981), 341-350
 mol                                  #Atomic (3 points) or Molecular (1 point) dipole moment (only the first character is important)
 0 0 0.728                            #Dipole moment of the molecule (X Y Z in the molecular frame)

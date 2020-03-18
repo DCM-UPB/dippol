@@ -5,7 +5,7 @@ constexpr unsigned int str2int(const char* str, int h = 0)
   return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
 }
 
-const double deduceMass(const std::string name)
+double deduceMass(const std::string name)
 {
   std::string name_uc = name;  
   std::for_each(name_uc.begin(), name_uc.end(), [](char & c){c = ::toupper(c);});
@@ -267,3 +267,29 @@ void writexyz(const loos::AtomicGroup group, std::ostream &output)
            << std::endl;  
   }
 }
+
+
+// Eigen::Matrix3d align(loos::AtomicGroup ref, loos::AtomicGroup mol, Eigen::Matrix<double,Eigen::Dynamic,3> w)
+// {
+//     if(ref.size() != mol.size())
+//     {
+//         cout << "Not possible to align two molecules of different sizes" << endl;
+//         exit(0);
+//     }
+//     
+//     if (w.rows() != ref.size())
+//     {
+//         cout << "Weight matrix should have the same size as molecules to be aligned!" << endl;
+//         exit(0);
+//     }
+//     
+//     Eigen::Map<Eigen::MatrixX<double,ref.size(),3>>
+//     
+//     Eigen::MatrixXd<ref.size(),3> M;
+//     // M.resize(ref.size(),3);
+//     
+//     
+//     Eigen::Matrix3d R;
+//     
+//     return R;
+// }

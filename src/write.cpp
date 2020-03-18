@@ -11,9 +11,11 @@
 #include <math.h>
 #include <main.h>
 
+using std::setw;
+using std::endl;
 
 /* Correlation function <a(t0+t).m(t0)> */
-void write_dippol(sys_info sys, vect_3d *dip0, vect_3d *dip, mat_sym_3d *pol0, mat_3d *pol, FILE *fileo){
+void write_dippol(sys_info sys, std::vector<vect_3d> &dip0, vect_3d *dip, mat_sym_3d *pol0, mat_3d *pol, std::ofstream &fileo){
   int i=0, inc_dip=0, inc_pol=0, inc_pol0=0;
   int v3_shift=sizeof(vect_3d)/sizeof(double), m3_shift=sizeof(mat_3d)/sizeof(double), m3_sym_shift=sizeof(mat_sym_3d)/sizeof(double);
   double *p_dip=NULL, *p_pol=NULL, *p_polb=NULL, *p_pol0=NULL, *p_dip0=NULL, *p_pol0b=NULL;
@@ -56,16 +58,17 @@ void write_dippol(sys_info sys, vect_3d *dip0, vect_3d *dip, mat_sym_3d *pol0, m
       inc_pol0=m3_sym_shift*i;
       
 #ifndef YUKI
-      fprintf(fileo,"%12.7f %12.7f %12.7f %12.7f\n",p_dip0[inc_dip],p_dip[inc_dip], \
-	      p_pol0[inc_pol0],p_pol[inc_pol]);
+      fileo << std::setw(18) << p_dip0[inc_dip] << std::setw(18) << p_dip[inc_dip] << std::setw(18) << p_pol0[inc_pol0] << std::setw(18) << p_pol[inc_pol] << endl;
+      //fprintf(fileo,"%12.7f %12.7f %12.7f %12.7f\n",p_dip0[inc_dip],p_dip[inc_dip],p_pol0[inc_pol0],p_pol[inc_pol]);
 #else
       /*Conversion from Ang^3 to bohr^3
        Then conversion from real to integers with Yuki style */
-      fprintf(fileo,"%5.0f%5.0f%5.0f\n",\
-	      (p_dip0[inc_dip])*1000+5000,				\
-	      (p_dip[inc_dip]-p_dip0[inc_dip])*1000+5000, \
-	      (p_pol[inc_pol]/pow(0.529177249,3)*10000-20000)*0.3				\
-	      );
+      fileo << (p_dip0[inc_dip])*1000+5000 << (p_dip[inc_dip]-p_dip0[inc_dip])*1000+5000 << (p_pol[inc_pol]/pow(0.529177249,3)*10000-20000)*0.3 << endl;
+//       fprintf(fileo,"%5.0f%5.0f%5.0f\n",
+// 	      (p_dip0[inc_dip])*1000+5000,				
+// 	      (p_dip[inc_dip]-p_dip0[inc_dip])*1000+5000,
+// 	      (p_pol[inc_pol]/pow(0.529177249,3)*10000-20000)*0.3			
+// 	      );
 #endif
 
     }
@@ -102,16 +105,12 @@ void write_dippol(sys_info sys, vect_3d *dip0, vect_3d *dip, mat_sym_3d *pol0, m
       inc_pol0=m3_sym_shift*i;
       
 #ifndef YUKI
-      fprintf(fileo,"%12.7f %12.7f %12.7f %12.7f\n",p_dip0[inc_dip],p_dip[inc_dip],(p_pol0[inc_pol0]+p_pol0b[inc_pol0])/2, \
-	      (p_pol[inc_pol]+p_polb[inc_pol])/2);
+      fileo << setw(18) << p_dip0[inc_dip] << setw(18) << p_dip[inc_dip] << setw(18) << (p_pol0[inc_pol0]+p_pol0b[inc_pol0])/2 << setw(18) << (p_pol[inc_pol]+p_polb[inc_pol])/2 << endl;
+      //fprintf(fileo,"%12.7f %12.7f %12.7f %12.7f\n",p_dip0[inc_dip],p_dip[inc_dip],(p_pol0[inc_pol0]+p_pol0b[inc_pol0])/2,(p_pol[inc_pol]+p_polb[inc_pol])/2);
 #else
       /*Conversion from Ang^3 to bohr^3
        Then conversion from real to integers with Yuki style */
-      fprintf(fileo,"%5.0f%5.0f%5.0f\n",				\
-	      (p_dip0[inc_dip])*1000+5000,				\
-	      (p_dip[inc_dip]-p_dip0[inc_dip])*1000+5000,		\
-	      (((p_pol[inc_pol]+p_polb[inc_pol])/2/pow(0.529177249,3))*10000-20000)*0.3	\
-	      );
+      fileo << (p_dip0[inc_dip])*1000+5000 << (p_dip[inc_dip]-p_dip0[inc_dip])*1000+5000 << (((p_pol[inc_pol]+p_polb[inc_pol])/2/pow(0.529177249,3))*10000-20000)*0.3 << endl;
 #endif
     }
 

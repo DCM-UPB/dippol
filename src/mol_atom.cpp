@@ -7,87 +7,69 @@
 #include "main.h"
 #include "my_math.h"
 #include "tools.hpp"
+#include "qcprot.h"
+#include "mol_atom.h"
 
 using std::cout;
 using std::endl;
 
-/*=================================================================
-  This subroutine calculates the permanent molecular dipole moment
-  and polarizability
-  =================================================================*/
-// void dippol0_molmol(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d *dip0, mat_sym_3d *pol0){
-//   double v1[3]={0.}, v2[3]={0.}, v3[3]={0.};
-// 
-//   /*Calculation of the direction cosine matrix*/
-//   /*  Projection of the molecular axis on the lab referential
-//       All the vector are normalized
-//       v3=first bissector of H2O
-//       v2=vector out of plane (vectorial product of bissector with one OH bond)
-//       v1=second vector in the molecular plane (vectorial procuct of the first two)*/
-// 
-//   Hossam
-//   modify definition of bisector to allow for flexible molecules
-// 
-//   const double doh1= sqrt(v_oh1[0]*v_oh1[0]+v_oh1[1]*v_oh1[1]+v_oh1[2]*v_oh1[2]);
-//   const double doh2= sqrt(v_oh2[0]*v_oh2[0]+v_oh2[1]*v_oh2[1]+v_oh2[2]*v_oh2[2]);
-//   
-//   v3[0]= doh1*v_oh2[0] + doh2*v_oh1[0];
-//   v3[1]= doh1*v_oh2[1] + doh2*v_oh1[1];
-//   v3[2]= doh1*v_oh2[2] + doh2*v_oh1[2];
-//   v3[0]=v_oh2[0]+v_oh1[0];
-//   v3[1]=v_oh2[1]+v_oh1[1];
-//   v3[2]=v_oh2[2]+v_oh1[2];
-//   norm(v3,v3);
-//   cross_p(v3,v_oh1,v2);
-//   norm(v2,v2);
-//   cross_p(v2,v3,v1);
-//       
-//   /*
-//     Calculation of the dipole moment (gas phase-like)
-//     Initially it is on the bissector
-//   */
-//   (*dip0).x()=(*sys).M_z*v3[0];
-//   (*dip0).y()=(*sys).M_z*v3[1];
-//   (*dip0).z()=(*sys).M_z*v3[2];
-// 
-//   /*
-//     Calculation of the polarizability tensor (gas phase-like)
-//     Initially it is on the bissector
-//   */
-//   (*pol0).xx = v1[0]*v1[0]*(*sys).A_xx + v2[0]*v2[0]*(*sys).A_yy + v3[0]*v3[0]*(*sys).A_zz;
-//   (*pol0).yx = v1[1]*v1[0]*(*sys).A_xx + v2[1]*v2[0]*(*sys).A_yy + v3[1]*v3[0]*(*sys).A_zz;
-//   (*pol0).yy = v1[1]*v1[1]*(*sys).A_xx + v2[1]*v2[1]*(*sys).A_yy + v3[1]*v3[1]*(*sys).A_zz;
-//   (*pol0).zx = v1[2]*v1[0]*(*sys).A_xx + v2[2]*v2[0]*(*sys).A_yy + v3[2]*v3[0]*(*sys).A_zz;
-//   (*pol0).zy = v1[2]*v1[1]*(*sys).A_xx + v2[2]*v2[1]*(*sys).A_yy + v3[2]*v3[1]*(*sys).A_zz;
-//   (*pol0).zz = v1[2]*v1[2]*(*sys).A_xx + v2[2]*v2[2]*(*sys).A_yy + v3[2]*v3[2]*(*sys).A_zz;
-// }
-void dippol0_molmol(sys_info *sys, const loos::AtomicGroup molecule, vect_3d *dip0, mat_sym_3d *pol0){
-    
-    Eigen::Matrix3d pa_ref = sys->all_mol_types[molecule[0]->resname()].princ;    
+void dippol0_molmol(sys_info *sys, const loos::AtomicGroup molecule, vect_3d &dip0, mat_sym_3d *pol0){
 
+    //NOTE loos alignment works fine
+    //but the returned xform always has the third column all zeros
+    //obviously a bug!
+    //Painfully using qcprot instead
     loos::AtomicGroup temp = molecule.copy();
     temp.mergeImage();
-    temp.centerAtOrigin();
-    Eigen::Matrix3d tensor = inertia_tensor(temp);
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> pas_es(tensor);
-    Eigen::Matrix3d pa_mol = pas_es.eigenvectors();
+    temp.centerAtOrigin();    
     
-    Eigen::Matrix3d dcm;
-    dcm << -1*pa_ref.col(0).dot(pa_mol.col(0)),
-    -1*pa_ref.col(0).dot(pa_mol.col(1)),
-    -1*pa_ref.col(0).dot(pa_mol.col(2)),
-    -1*pa_ref.col(1).dot(pa_mol.col(0)),
-    -1*pa_ref.col(1).dot(pa_mol.col(1)),
-    -1*pa_ref.col(1).dot(pa_mol.col(2)),
-    pa_ref.col(2).dot(pa_mol.col(0)),
-    pa_ref.col(2).dot(pa_mol.col(1)),
-    pa_ref.col(2).dot(pa_mol.col(2));
+    loos::AtomicGroup ref = sys->all_mol_types[molecule[0]->resname()].ref.copy();
+    ref.centerAtOrigin();
     
+    
+    double **A = MatInit(3,temp.size());
+    double **B = MatInit(3,temp.size());
+    
+    for (int j=0; j<temp.size(); j++)
+    {
+        A[0][j] = temp[j]->coords().x();
+        A[1][j] = temp[j]->coords().y();
+        A[2][j] = temp[j]->coords().z();
+        
+        B[0][j] = ref[j]->coords().x();
+        B[1][j] = ref[j]->coords().y();
+        B[2][j] = ref[j]->coords().z();
+    }
+    
+//     Eigen::Matrix3d tensor = inertia_tensor(temp);
+//     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> es(tensor);
+//     Eigen::Matrix3d pa_mol = es.eigenvectors();
+
+    double *weight = new double[temp.size()];
+    
+    for (int i=0; i<temp.size(); i++)
+        weight[i] =1;
+    
+    double rotmat[9];
+    double rmsd;
+    
+    rmsd = CalcRMSDRotationalMatrix((double **) A, (double **) B, temp.size(), rotmat, weight);
+    Eigen::Matrix3d dcm = Mat3_to_eigen(rotmat);    
 
     Eigen::Vector3d rot_dip = dcm * gcoord_to_eigenv(sys->all_mol_types[molecule[0]->resname()].dip);
-    (*dip0).x()=rot_dip(0);
-    (*dip0).y()=rot_dip(1);
-    (*dip0).z()=rot_dip(2);
+    dip0.x()=rot_dip(0);
+    dip0.y()=rot_dip(1);
+    dip0.z()=rot_dip(2);
+    
+    //     cout << "4" << endl << endl;
+    //     for (int i =0; i <3; i++)
+    //         cout << "O " << (dcm * gcoord_to_eigenv(ref[i]->coords())).transpose() << endl;
+    //     cout << "X " << gcoord_to_eigenv(dip0).transpose() << endl << endl << endl;
+    //     
+    //     
+    //     cout << "3" << endl << endl;
+    //     for (int i =0; i <3; i++)
+    //         cout << "O " << gcoord_to_eigenv(temp[i]->coords()).transpose() << endl;
     
     //Now transform alpha
     Eigen::Matrix3d alpha_rot = dcm * sys->all_mol_types[molecule[0]->resname()].alpha_m * dcm.transpose();
@@ -100,6 +82,10 @@ void dippol0_molmol(sys_info *sys, const loos::AtomicGroup molecule, vect_3d *di
     
     //Now transform beta
     //NOTE to be implemented
+    
+    MatDestroy(&A);
+    MatDestroy(&B);
+    delete [] weight;
 }
 
 
@@ -179,7 +165,7 @@ void dippol0_molat(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d *dip0, m
   This subroutine calculates the permanent atomic dipole moment
   and atomic polarizability
   =============================================================*/
-void dippol0_atat(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d *dip0, mat_sym_3d *pol0){
+void dippol0_atat(sys_info *sys, double *v_oh1, double *v_oh2, vect_3d* dip0, mat_sym_3d *pol0){
   double v1[3]={0.}, v2[3]={0.}, v3[3]={0.};
 
   /*Calculation of the direction cosine matrix for  O*/
@@ -281,4 +267,83 @@ void pol_at2mol(mat_3d *pol, mat_3d *pol_mol){
   (*pol_mol).zx = (*(pol + 0)).zx + (*(pol + 1)).zx + (*(pol + 2)).zx;
   (*pol_mol).zy = (*(pol + 0)).zy + (*(pol + 1)).zy + (*(pol + 2)).zy;
   (*pol_mol).zz = (*(pol + 0)).zz + (*(pol + 1)).zz + (*(pol + 2)).zz;
+}
+
+
+double **MatInit(const int rows, const int cols)
+{
+    int             i;
+    double        **matrix = NULL;
+    double         *matspace = NULL;
+
+    matspace = (double *) calloc((rows * cols), sizeof(double));
+    if (matspace == NULL)
+    {
+        perror("\n ERROR");
+        printf("\n ERROR: Failure to allocate matrix space in MatInit(): (%d x %d)\n", rows, cols);
+        exit(EXIT_FAILURE);
+    }
+
+    /* allocate room for the pointers to the rows */
+    matrix = (double **) malloc(rows * sizeof(double *));
+    if (matrix == NULL)
+    {
+        perror("\n ERROR");
+        printf("\n ERROR: Failure to allocate room for row pointers in MatInit(): (%d)\n", rows);
+        exit(EXIT_FAILURE);
+    }
+
+    /*  now 'point' the pointers */
+    for (i = 0; i < rows; i++)
+        matrix[i] = matspace + (i * cols);
+
+    return(matrix);
+}
+
+
+void MatDestroy(double ***matrix_ptr)
+{
+    double **matrix = *matrix_ptr;
+
+    if (matrix != NULL)
+    {
+        if (matrix[0] != NULL)
+        {
+            free(matrix[0]);
+            matrix[0] = NULL;
+        }
+
+        free(matrix);
+        *matrix_ptr = NULL;
+    }
+}
+
+
+static void Mat3Print(double *matrix)
+{
+    int             i;
+
+    printf("\n");
+    for (i = 0; i < 3; ++i)
+    {
+        printf(" [ % 14.8f % 14.8f % 14.8f ]\n",
+               matrix[3 * i],
+               matrix[3 * i + 1],
+               matrix[3 * i + 2]);
+    }
+
+    fflush(NULL);
+}
+
+Eigen::Matrix3d Mat3_to_eigen(double *matrix)
+{
+    Eigen::Matrix3d current;
+    int             i;
+    for (i = 0; i < 3; ++i)
+    {
+        current(i,0) = matrix[3 * i];
+        current(i,1) = matrix[3 * i + 1];
+        current(i,2) = matrix[3 * i + 2];
+    }
+    return current;
 }

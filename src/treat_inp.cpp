@@ -29,8 +29,9 @@ using std::setw;
 /*==================================*/
 /*Reading the input file of the user*/
 /*==================================*/
-void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
-  int i=0, first_H=0;
+int read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
+  int i=0;
+  //int first_H=0;
   char symb=0;
   char chain[CHAIN_SIZE]="",p[CHAIN_SIZE]="",q[CHAIN_SIZE]="",r[CHAIN_SIZE]="";
   std::ifstream file;
@@ -88,9 +89,9 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   //fgets(chain,CHAIN_SIZE,file);
   file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%d",&((*sys).at_p_mol));/*Atoms per molecule*/
-  MALLOC_SAFE((*sys).order,(*sys).at_p_mol,int);
+  //MALLOC_SAFE((*sys).order,(*sys).at_p_mol,int);
 
-  first_H=1;
+  //first_H=1;
   for(i=0;i<(*sys).at_p_mol;i++){
     //symb=fgetc(file);
     file.get(symb);
@@ -99,17 +100,17 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     //fgets(chain,CHAIN_SIZE,file);
     file.getline(chain,CHAIN_SIZE);
 
-    if(symb=='O'){(*sys).order[i]=0;}
-    else if(symb=='H'){
-      if(first_H){
-	(*sys).order[i]=3;/*H1*/
-	first_H=0;
-      }
-      else{
-	(*sys).order[i]=6;/*H2*/
-      }
-    }
-    else{(*sys).order[i]=9;}/*Any dummy atom*/
+//     if(symb=='O'){(*sys).order[i]=0;}
+//     else if(symb=='H'){
+//       if(first_H){
+// 	(*sys).order[i]=3;/*H1*/
+// 	first_H=0;
+//       }
+//       else{
+// 	(*sys).order[i]=6;/*H2*/
+//       }
+//     }
+//     else{(*sys).order[i]=9;}/*Any dummy atom*/
   }
 
   /*
@@ -329,6 +330,7 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
     //cout << (*sys).all_mol_types["WAT"].dip[2] << endl;
     //cout << (*sys).all_mol_types["CHL"].dip[2] << endl;
     file.close();
+    return 0;
 }
 
 
@@ -336,20 +338,23 @@ void read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
 /*==============================*/
 /*Reading of the trajectory file*/
 /*==============================*/
-void trajectory(sys_info *sys, input_info input, char *argv[]) {
+int trajectory(sys_info *sys, input_info input, char *argv[]) {
     //H FILE *filei=NULL;
-    FILE *file_debug=NULL;
-    int step=0, i=0, j=0, start_read=0, end_read=0;
-    double time=0.;
-    char chain[CHAIN_SIZE]="";
+    std::ofstream file_debug;
+    int step=0, i=0, j=0;
+    //double time=0.;
+    //char chain[CHAIN_SIZE]="";
     
-    double *x=NULL, *y=NULL, *z=NULL, *r=NULL, *fthole=NULL, *at_coord;
-    vect_3d *dip0=NULL,*dip0_mol=NULL, *dip=NULL, *dip_mol=NULL, *e_ind=NULL, *v3_tmp=NULL;
+    //double *x=NULL, *y=NULL, *z=NULL, *r=NULL, *fthole=NULL, *at_coord;
+    double *fthole=NULL;
+    //double *at_coord;
+    vect_3d *dip=NULL, *dip_mol=NULL, *e_ind=NULL, *v3_tmp=NULL;
     //mol_info *mol=NULL;
     mat_sym_3d *pol0=NULL, *pol0_mol=NULL, *Tij_mc=NULL, *Tij_at=NULL;
     mat_3d *pol=NULL, *pol_mol=NULL, *a_ind=NULL, *m3_tmp=NULL;
-    FILE *fileo=NULL, *file_traj=NULL,*file_dip0=NULL,*file_pol0=NULL;
-    FILE *file_Tij_mc=NULL, *file_Tij_at=NULL, *file_dip=NULL,*file_pol=NULL,*file_dip_ind=NULL, *file_pol_ind=NULL;
+    std::ofstream fileo;
+    std::ofstream file_traj, file_dip0, file_pol0, file_Tij_mc, file_Tij_at;
+    std::ofstream file_dip,file_pol,file_dip_ind, file_pol_ind;
     
     /*To facilitate the reading, I extract the info from structure input*/
     //H int stepi=input.stepi, stepf=input.stepf;
@@ -366,154 +371,125 @@ void trajectory(sys_info *sys, input_info input, char *argv[]) {
     traj->updateGroupCoords(topology);
     std::vector<loos::AtomicGroup> all_mols = topology.splitByMolecule();
     
-    //H FOPEN_SAFE(filei,namei,"r");
-    FOPEN_SAFE(fileo,input.nameo,"w+");
+    /*Preparation of the different values requiered for the allocation*/
+    //H (*sys).nb_mol  =(*sys).nb_at/(*sys).at_p_mol;
+    //H (*sys).nb_point=(*sys).nb_at/(*sys).at_p_mol;
+    (*sys).nb_mol = all_mols.size();
+    (*sys).nb_point = (*sys).nb_mol;
+    (*sys).nb_dip   = (*sys).nb_mol;
+    (*sys).nb_pol   = (*sys).nb_mol;
+    
+    if((*sys).typ_dip){/*Atomic dipole*/
+        //H (*sys).nb_dip  =3*(*sys).nb_mol;
+        //H (*sys).nb_point=3*(*sys).nb_mol;
+        (*sys).nb_dip   = topology.size();
+        (*sys).nb_point = topology.size();
+    }
+    if((*sys).typ_pol){/*Atomic polarizability*/
+        //H (*sys).nb_pol  =3*(*sys).nb_mol;
+        //H (*sys).nb_point=3*(*sys).nb_mol;
+        (*sys).nb_pol   = topology.size();
+        (*sys).nb_point = topology.size();
+    }
+    
+    fileo.open(input.nameo);
     #ifndef YUKI
-    FOPEN_SAFE(file_traj,input.name_mass,"w+");
-    fprintf(fileo,"#This file has been written by %s. Edit it at your own risk.\n",argv[0]);
-    fprintf(fileo,"#Mass_center_file %s\n",input.name_mass);
-    fprintf(fileo,"#Cell_parameters %f %f %f\n",(*sys).cell.x(),(*sys).cell.y(),(*sys).cell.z());
-    fprintf(fileo,"#Cutoff_Ang %f\n",(*sys).cutoff);
-    fprintf(fileo,"#Dip0 Dip_comp Pol0 Pol_comp\n");
+    file_traj.open(input.name_mass);
+    fileo << "This file has been written by " << argv[0] << ". Edit it at your own risk.\n";
+    fileo << "#Mass_center_file " << input.name_mass << endl;
+    fileo << "#Cell_parameters " << (*sys).cell.x() << " " << (*sys).cell.y() << " " << (*sys).cell.z() << endl;
+    fileo << "#Cutoff_Ang " << (*sys).cutoff << endl;
+    fileo << "#Dip0 Dip_comp Pol0 Pol_comp\n";
     #endif
     
-    /*The trajectory file is read while we have not reached EOF
-     or* the maximal value authorized by the user */
+    
+    //NOTE need to carefully check the following allocations
+    /*Creation of the different arrays and files*/
+    if((*sys).typ_dip + (*sys).typ_pol){ /* Atomic dipole moment or polarizability */
+        MALLOC_SAFE(Tij_at,(*sys).nb_point*((*sys).nb_point-1)/2,mat_sym_3d);
+    }
+    //H MALLOC_SAFE(mol     ,(*sys).nb_mol                        ,mol_info);
+    //MALLOC_SAFE(at_coord,3*topology.size()                      ,double);
+    //MALLOC_SAFE(dip0    ,(*sys).nb_dip                        ,vect_3d);
+    MALLOC_SAFE(dip     ,(*sys).nb_dip                        ,vect_3d);
+    //MALLOC_SAFE(dip0_mol,(*sys).nb_mol                        ,vect_3d);
+    MALLOC_SAFE(dip_mol ,(*sys).nb_mol                        ,vect_3d);
+    MALLOC_SAFE(pol0    ,(*sys).nb_pol                        ,mat_sym_3d);
+    MALLOC_SAFE(pol     ,(*sys).nb_pol                        ,mat_3d);
+    MALLOC_SAFE(pol0_mol,(*sys).nb_mol                        ,mat_sym_3d);
+    MALLOC_SAFE(pol_mol ,(*sys).nb_mol                        ,mat_3d);
+    MALLOC_SAFE(e_ind   ,(*sys).nb_dip                        ,vect_3d);
+    MALLOC_SAFE(v3_tmp  ,(*sys).nb_dip                        ,vect_3d);
+    MALLOC_SAFE(a_ind   ,(*sys).nb_pol                        ,mat_3d);
+    MALLOC_SAFE(m3_tmp  ,(*sys).nb_pol                        ,mat_3d);
+    MALLOC_SAFE(Tij_mc  ,(*sys).nb_mol*((*sys).nb_mol-1)/2    ,mat_sym_3d);
+    MALLOC_SAFE(fthole  ,(*sys).nb_point*((*sys).nb_point-1)  ,double);
+    
+    /* Initialization of thole screening factor to 1 (No thole factor)*/
+    for(i=0;i<(*sys).nb_point*((*sys).nb_point-1);i++){
+        fthole[i]=1.;
+    }
+    
+    
+    #ifdef DEBUG
+    file_debug.open(DEBUG_TRAJ);
+    file_dip0.open(DEBUG_DIP0);
+    file_pol0.open(DEBUG_POL0);
+    file_Tij_mc.open(DEBUG_TIJ_MC);
+    file_dip_ind.open(DEBUG_DIP_IND);
+    file_dip.open(DEBUG_DIP);
+    file_pol.open(DEBUG_POL);
+    file_pol_ind.open(DEBUG_POL_IND);
+    file_debug << "#Step_number Record_number Mol_number atom_number x y z\n";
+    file_dip0 << "#Record_number Mol_number dip0_x dip0_y dip0_z\n";
+    file_pol0 << "#Record_number Mol_number pol0_xx pol0_yx pol0_yy pol0_zx pol0_zy pol0_zz\n";
+    file_Tij_mc << "#Record_number Mol_i Mol_j Tij_xx Tij_yx Tij_yy Tij_zx Tij_zy Tij_zz\n";
+    file_dip_ind << "#Record_number Mol_number e_ind_x e_ind_y e_ind_z at the order N\n";
+    file_dip << "#Record_number Mol_number dip_x dip_y dip_z\n";
+    file_pol << "#Record_number Mol_number pol_xx pol_xy pol_xz pol_yx pol_yy pol_yz pol_zx pol_zy pol_zz\n";
+    file_pol_ind << "#Record_number Mol_number a_ind_xx xy xz yx yy yz zx zy zz at the order N\n";
+    if((*sys).typ_dip + (*sys).typ_pol){ /* Atomic dipole moment or polarizability */
+        file_Tij_at.open(DEBUG_TIJ_AT);
+        file_Tij_at << "#Record_number Mol_i Mol_j Tij_xx Tij_yx Tij_yy Tij_zx Tij_zy Tij_zz\n";
+    }
+    #endif
+    
+    #ifndef YUKI
+    file_traj << (*sys).nb_mol << endl << endl;
+    #endif
+    
+    //NOW loop over trajectory frames
     for(int frame_i=input.stepi; (frame_i < input.stepf) && (frame_i < traj->nframes()) ; frame_i++)
     {
         traj->readFrame(frame_i);
         traj->updateGroupCoords(topology);
         //NOTE probably the culprit, Kill it!
-        at_coord = topology.coordsAsVector().data();
-    
-        if (frame_i == input.stepi)
-        {
-            
-            /*========================*/
-            /*First step selected only*/
-            /*========================*/
-            //H if(step>=input.stepi ){ //NOTE why >=??
-            //H start_read=1;
-            
-            /*Preparation of the different values requiered for the allocation*/
-            //H (*sys).nb_mol  =(*sys).nb_at/(*sys).at_p_mol;
-            //H (*sys).nb_point=(*sys).nb_at/(*sys).at_p_mol;
-            (*sys).nb_mol   = topology.splitByMolecule().size();
-            (*sys).nb_point = (*sys).nb_mol;
-            (*sys).nb_dip   = (*sys).nb_mol;
-            (*sys).nb_pol   = (*sys).nb_mol;
-            
-            //read the molecules here and populate nb_dip and nb_point
-            
-            if((*sys).typ_dip){/*Atomic dipole*/
-                //H (*sys).nb_dip  =3*(*sys).nb_mol;
-                //H (*sys).nb_point=3*(*sys).nb_mol;
-                (*sys).nb_dip   = topology.size();
-                (*sys).nb_point = topology.size();
-            }
-            if((*sys).typ_pol){/*Atomic polarizability*/
-                //H (*sys).nb_pol  =3*(*sys).nb_mol;
-                //H (*sys).nb_point=3*(*sys).nb_mol;
-                (*sys).nb_pol   = topology.size();
-                (*sys).nb_point = topology.size();
-            }
-            
-            
-            //NOTE need to carefully check the following allocations
-            /*Creation of the different arrays and files*/
-            if((*sys).typ_dip + (*sys).typ_pol){ /* Atomic dipole moment or polarizability */
-                MALLOC_SAFE(Tij_at,(*sys).nb_point*((*sys).nb_point-1)/2,mat_sym_3d);
-            }
-            //H MALLOC_SAFE(mol     ,(*sys).nb_mol                        ,mol_info);
-            MALLOC_SAFE(at_coord,9*(*sys).nb_mol                      ,double);
-            MALLOC_SAFE(dip0    ,(*sys).nb_dip                        ,vect_3d);
-            MALLOC_SAFE(dip     ,(*sys).nb_dip                        ,vect_3d);
-            MALLOC_SAFE(dip0_mol,(*sys).nb_mol                        ,vect_3d);
-            MALLOC_SAFE(dip_mol ,(*sys).nb_mol                        ,vect_3d);
-            MALLOC_SAFE(pol0    ,(*sys).nb_pol                        ,mat_sym_3d);
-            MALLOC_SAFE(pol     ,(*sys).nb_pol                        ,mat_3d);
-            MALLOC_SAFE(pol0_mol,(*sys).nb_mol                        ,mat_sym_3d);
-            MALLOC_SAFE(pol_mol ,(*sys).nb_mol                        ,mat_3d);
-            MALLOC_SAFE(e_ind   ,(*sys).nb_dip                        ,vect_3d);
-            MALLOC_SAFE(v3_tmp  ,(*sys).nb_dip                        ,vect_3d);
-            MALLOC_SAFE(a_ind   ,(*sys).nb_pol                        ,mat_3d);
-            MALLOC_SAFE(m3_tmp  ,(*sys).nb_pol                        ,mat_3d);
-            MALLOC_SAFE(Tij_mc  ,(*sys).nb_mol*((*sys).nb_mol-1)/2    ,mat_sym_3d);
-            MALLOC_SAFE(x       ,(*sys).nb_point*((*sys).nb_point-1)/2,double);
-            MALLOC_SAFE(y       ,(*sys).nb_point*((*sys).nb_point-1)/2,double);
-            MALLOC_SAFE(z       ,(*sys).nb_point*((*sys).nb_point-1)/2,double);
-            MALLOC_SAFE(r       ,(*sys).nb_point*((*sys).nb_point-1)/2,double);
-            MALLOC_SAFE(fthole  ,(*sys).nb_point*((*sys).nb_point-1)  ,double);
-            
-            /* Initialization of thole screening factor to 1 (No thole factor)*/
-            for(i=0;i<(*sys).nb_point*((*sys).nb_point-1);i++){
-                fthole[i]=1.;
-            }
-            
-            
-            #ifdef DEBUG
-            FOPEN_SAFE(file_debug,DEBUG_TRAJ,"w+");
-            FOPEN_SAFE(file_dip0,DEBUG_DIP0,"w+");
-            FOPEN_SAFE(file_pol0,DEBUG_POL0,"w+");
-            FOPEN_SAFE(file_Tij_mc ,DEBUG_TIJ_MC ,"w+");
-            FOPEN_SAFE(file_dip_ind,DEBUG_DIP_IND,"w+");
-            FOPEN_SAFE(file_dip    ,DEBUG_DIP    ,"w+");
-            FOPEN_SAFE(file_pol    ,DEBUG_POL    ,"w+");
-            FOPEN_SAFE(file_pol_ind,DEBUG_POL_IND,"w+");
-            fprintf(file_debug,"#Step_number Record_number Mol_number atom_number x y z\n");
-            fprintf(file_dip0,"#Record_number Mol_number dip0_x dip0_y dip0_z\n");
-            fprintf(file_pol0,"#Record_number Mol_number pol0_xx pol0_yx pol0_yy pol0_zx pol0_zy pol0_zz\n");
-            fprintf(file_Tij_mc,"#Record_number Mol_i Mol_j Tij_xx Tij_yx Tij_yy Tij_zx Tij_zy Tij_zz\n");
-            fprintf(file_dip_ind,"#Record_number Mol_number e_ind_x e_ind_y e_ind_z at the order N\n");
-            fprintf(file_dip,"#Record_number Mol_number dip_x dip_y dip_z\n");
-            fprintf(file_pol,"#Record_number Mol_number pol_xx pol_xy pol_xz pol_yx pol_yy pol_yz pol_zx pol_zy pol_zz\n");
-            fprintf(file_pol_ind,"#Record_number Mol_number a_ind_xx xy xz yx yy yz zx zy zz at the order N\n");
-            if((*sys).typ_dip + (*sys).typ_pol){ /* Atomic dipole moment or polarizability */
-                FOPEN_SAFE(file_Tij_at ,DEBUG_TIJ_AT ,"w+");
-                fprintf(file_Tij_at,"#Record_number Mol_i Mol_j Tij_xx Tij_yx Tij_yy Tij_zx Tij_zy Tij_zz\n");
-            }
-            #endif
-        }
-        if(frame_i>=input.stepf){end_read=1;}
+        //at_coord = topology.coordsAsVector().data();
+        //cout << "SIZESIZE " << topology.coordsAsVector().size();
+        std::vector<vect_3d> dip0((*sys).nb_dip);
+        std::vector<vect_3d> dip0_mol((*sys).nb_mol);
+                
         
-        #ifndef YUKI
-        fprintf(file_traj,"%d\n",(*sys).nb_mol);
-        fprintf(file_traj,"\n");
-        #endif
-      
-        
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for (int mol_i = 0; mol_i < all_mols.size(); mol_i++)
         {
             all_mols[mol_i].reimage();
         }
- 
- 
-         /*================================================================================
-          * Calculation of* the complete dipole moment / polarizability (permanent + induced)
-          *================================================================================*/
-         val_init(sys,all_mols,dip0,dip0_mol,pol0,pol0_mol,file_traj,file_dip0,file_pol0,step);/*dip0, pol0*/
-         comp_dip_pol(sys,all_mols,at_coord,dip0,dip0_mol,dip,dip_mol,pol0,pol0_mol,pol,pol_mol,e_ind,a_ind,v3_tmp,m3_tmp,Tij_mc,Tij_at,x,y,z,r,fthole,fileo,file_Tij_mc,file_Tij_at,file_dip,file_pol,file_dip_ind,file_pol_ind,step);/*Induction*/
-         
-         (*sys).step_max++; /* Real number of steps recorded (can be lower than stepf-stepi+1) */
+        
+        /*================================================================================
+         * Calculation of* the complete dipole moment / polarizability (permanent + induced)
+         *================================================================================*/
+        cout << "calling val_init " << endl;
+        val_init(sys,all_mols,dip0,dip0_mol,pol0,pol0_mol,file_traj,file_dip0,file_pol0,step);/*dip0, pol0*/
+        cout << "done val_init" << endl;
+        comp_dip_pol(sys, all_mols, dip0, dip0_mol, dip, dip_mol, pol0, pol0_mol, pol, pol_mol, e_ind, a_ind, v3_tmp, m3_tmp, Tij_mc, Tij_at, fthole, fileo, file_Tij_mc, file_Tij_at, file_dip, file_pol, file_dip_ind, file_pol_ind, step);
+        
+        
+        (*sys).step_max++; /* Real number of steps recorded (can be lower than stepf-stepi+1) */
     }//end loop over trajectory
     
-    //NOTE got this else without a preceding if
-    // Okay got it, no need, loos is taking care of
-    // finding the correct start frame and skippin preceding ones
-    //else{/*Passing the lines before stepi*/
-    //    for(i=1;i<=(*sys).nb_at;i++){
-    //        fgets(chain,CHAIN_SIZE,filei);
-    //    }
-    //}
-    //} //NOTE found extra brace here, check if something is wrong
-    
     /* Release the memory */
-    //free(mol);
-    free(at_coord);
-    free(dip0);
     free(dip);
-    free(dip0_mol);
     free(dip_mol);
     free(pol0);
     free(pol);
@@ -523,31 +499,25 @@ void trajectory(sys_info *sys, input_info input, char *argv[]) {
     free(v3_tmp);
     free(m3_tmp);
     free(Tij_mc);
-    free(x);
-    free(y);
-    free(z);
-    free(r);
     free(fthole);
+    free(a_ind);
     if((*sys).typ_dip + (*sys).typ_pol){free(Tij_at);}
     
-    //fclose(filei);
-    fclose(fileo);
+    fileo.close();
     #ifndef YUKI
-    fclose(file_traj);
+    file_traj.close();
     #endif
     #ifdef DEBUG
-    fclose(file_debug);
-    fclose(file_dip0);
-    fclose(file_pol0);
-    fclose(file_Tij_mc);
-    fclose(file_dip);
-    fclose(file_pol);
-    fclose(file_dip_ind);
-    if((*sys).typ_dip + (*sys).typ_pol){fclose(file_Tij_at);}
+    file_dip0.close();
+    file_pol0.close();
+    file_Tij_mc.close();
+    file_debug.close();
+    file_dip.close();
+    file_pol.close();
+    file_dip_ind.close();
+    if((*sys).typ_dip + (*sys).typ_pol){file_Tij_at.close();}
     #endif
     
-    
-    
-    return;
+    return 0;
 }
 
