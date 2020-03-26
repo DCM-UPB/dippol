@@ -15,7 +15,7 @@
 #   polarizability, hyperpolarizability, together with the molecular coordinate frame
 #   that corresponds to these tensors.
 #
-#2. OMP parallelization (In progress)
+#2. OMP parallelization (Not fully tested yet)
 #
 # ---------   TO BE DONE  ------------------
 #2. Implement Torii's extended dipole model:
