@@ -19,7 +19,7 @@
 using std::cout;
 
 int main(int argc, char *argv[]){
-  input_info input={0,0,"","","",""};
+  input_info input={0,0,0,"","","",""};
   std::map<std::string,mol_type> all_mol_types;
   sys_info sys={{0.,0.,0.},0,0,0,0,0,0,0,0.0,				\
   0,0,0,0,0,0,0,					\

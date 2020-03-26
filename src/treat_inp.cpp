@@ -83,7 +83,7 @@ int read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   /*Initial / Final step*/
   //fgets(chain,CHAIN_SIZE,file);
   file.getline(chain,CHAIN_SIZE);
-  sscanf(chain,"%d %d",&((*input).stepi),&((*input).stepf));
+  sscanf(chain,"%d %d %d",&((*input).stepi),&((*input).stepf),&((*input).stepd));
 
   /*Order of the atoms (only the first character will be read)*/
   //fgets(chain,CHAIN_SIZE,file);
@@ -472,7 +472,7 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
     #endif
     
     //NOW loop over trajectory frames
-    for(int frame_i=input.stepi; (frame_i < input.stepf) && (frame_i < traj->nframes()) ; frame_i++)
+    for(int frame_i=input.stepi; (frame_i < input.stepf) && (frame_i < traj->nframes()) ; frame_i+= input.stepd)
     {
         cout << "\rProcessing frame " << frame_i  << std::flush;
         traj->readFrame(frame_i);

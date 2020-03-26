@@ -120,7 +120,7 @@ typedef struct mat_3d
 */
 typedef struct input_info
 {
-  int stepi,stepf; 
+  int stepi,stepf, stepd; 
   char namei[CHAIN_SIZE], namet[CHAIN_SIZE], nameo[CHAIN_SIZE], name_mass[CHAIN_SIZE]; //Hossam, added namet
 } input_info;
 
