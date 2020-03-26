@@ -1,0 +1,30 @@
+nve.trr                              #File name of the pos file
+CHL_1.gro                            #topology, must include atomic masses!
+dippol_1P_iso.dat                    #Name of the output file
+center_mass_1P_iso.xyz               #Output file center of mass
+51.0454   51.0454   51.0454        #Parameters of the box
+0 750  10                            #Initial, final, and increment of trajectory frames
+3 		                     #Number of atom to describe the molecule
+O		                     #Atom 1: Only the first character is important
+H		                     #Atom 2: Only the first character is important
+H		                     #Atom 3: Only the first character is important
+S S Z                                #Polarization of the light: X, Y, Z, S (S=(X+Y)/2)
+7.0                                  #Cutoff for the dipole field tensor (over this value it is set to 0)
+0                                    #Activation of the exponential Thole damping factor (0=off) Chem. Phys., 59, (1981), 341-350
+mol                                  #Atomic (3 points) or Molecular (1 point) dipole moment (only the first character is important)
+0 0 0.728                            #Dipole moment of the molecule (X Y Z in the molecular frame)
+mol                                  #Atomic (3 points) or Molecular (1 point) dipole moment
+1.470  0  0  0 1.381 0. 0. 0. 1.420    #Polarizability tensor (bottom part: xx, yx, yy, zx, zy, zz)
+1                                    #Intramolecular DID for 3 points model (0=no). Useless if "molecular"
+
+
+[CHL]                                   #molecule name as in psf file, _between_square_brackets_and_without_spaces!
+5                                       #number of atoms
+H         0.000006       -0.000005       -1.557926
+Cl       -1.091123       -1.272801        0.069418
+Cl       -0.556717        1.581339        0.069419
+Cl        1.647841       -0.308539        0.069418
+C        -0.000003        0.000005       -0.476028
+DIP -0.00002944   0.00003930 -1.20729350		  
+ALPHA   8.726076 0 0 0 8.726042 0 0 0  6.306228 # polarizability tensor: xx xy xz yx yy yz zx zy zz
+END                                     #Don't forget this!
