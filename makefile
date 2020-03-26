@@ -1,7 +1,7 @@
 #=================================
 #Do we want debug options for gcc?
 #=================================
-DEBUG='warning'
+#DEBUG='warning'
 #YUKI='-D YUKI'
 #OMP=-fopenmp
 ifeq ($(DEBUG),'warning')

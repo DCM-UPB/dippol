@@ -294,7 +294,7 @@ double **MatInit(const int rows, const int cols)
     }
 
     /*  now 'point' the pointers */
-    for (i = 0; i < rows; i++)
+    for (int i = 0; i < rows; i++)
         matrix[i] = matspace + (i * cols);
 
     return(matrix);
@@ -324,7 +324,7 @@ static void Mat3Print(double *matrix)
     int             i;
 
     printf("\n");
-    for (i = 0; i < 3; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         printf(" [ % 14.8f % 14.8f % 14.8f ]\n",
                matrix[3 * i],
@@ -339,7 +339,7 @@ Eigen::Matrix3d Mat3_to_eigen(double *matrix)
 {
     Eigen::Matrix3d current;
     int             i;
-    for (i = 0; i < 3; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         current(i,0) = matrix[3 * i];
         current(i,1) = matrix[3 * i + 1];

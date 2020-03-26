@@ -92,7 +92,7 @@ int read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   //MALLOC_SAFE((*sys).order,(*sys).at_p_mol,int);
 
   //first_H=1;
-  for(i=0;i<(*sys).at_p_mol;i++){
+  for(int i=0;i<(*sys).at_p_mol;i++){
     //symb=fgetc(file);
     file.get(symb);
     //file.ignore(1000,'\n');
@@ -246,7 +246,7 @@ int read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
             int mol_size;
             file >> mol_size;
             file.ignore(1000,'\n');
-            loos::AtomicGroup new_mol(3);
+            loos::AtomicGroup new_mol(mol_size);
             for (int i=0; i < new_mol.size(); i++)
             {
                 std::string at_label;
@@ -355,6 +355,7 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
     std::ofstream fileo;
     std::ofstream file_traj, file_dip0, file_pol0, file_Tij_mc, file_Tij_at;
     std::ofstream file_dip,file_pol,file_dip_ind, file_pol_ind;
+    std::ofstream file_dip_f, file_pol_f;
     
     /*To facilitate the reading, I extract the info from structure input*/
     //H int stepi=input.stepi, stepf=input.stepf;
@@ -364,12 +365,20 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
     //Open the traj and topology as loos objects
     loos::AtomicGroup topology = loos::createSystem(input.namet); //Hossam
     topology.periodicBox(sys->cell);
+    cout << "Size of system " << topology.size() << " atoms." << endl;
+    //cout << *topology[topology.size()-1] << endl;
+    //std::vector<loos::AtomicGroup> all_mols_temp = topology.splitByResidue();
+    //cout << "temp size " << all_mols_temp.size() << endl;
     //cout << topology.size() << endl; //Hossam
     //cout << topology.splitByMolecule().size() << endl; //Hossam
+    //TRR traj(vm["trr"].as<string>().c_str());
     loos::pTraj traj = createTrajectory(input.namei,topology);//Hossam
     traj->readFrame(0);
     traj->updateGroupCoords(topology);
-    std::vector<loos::AtomicGroup> all_mols = topology.splitByMolecule();
+    //cout << topology << endl;
+    //cout << *topology[topology.size()-1] << endl;
+    std::vector<loos::AtomicGroup> all_mols = topology.splitByResidue();
+    cout << "Found " << all_mols.size() << " molecules per frame." << endl;
     
     /*Preparation of the different values requiered for the allocation*/
     //H (*sys).nb_mol  =(*sys).nb_at/(*sys).at_p_mol;
@@ -426,11 +435,13 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
     MALLOC_SAFE(fthole  ,(*sys).nb_point*((*sys).nb_point-1)  ,double);
     
     /* Initialization of thole screening factor to 1 (No thole factor)*/
-    for(i=0;i<(*sys).nb_point*((*sys).nb_point-1);i++){
+    for(int i=0;i<(*sys).nb_point*((*sys).nb_point-1);i++){
         fthole[i]=1.;
     }
     
     
+    file_dip_f.open((std::string(input.namet) + "_dip").c_str());
+    file_pol_f.open((std::string(input.namet) + "_pol").c_str());
     #ifdef DEBUG
     file_debug.open(DEBUG_TRAJ);
     file_dip0.open(DEBUG_DIP0);
@@ -446,7 +457,9 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
     file_Tij_mc << "#Record_number Mol_i Mol_j Tij_xx Tij_yx Tij_yy Tij_zx Tij_zy Tij_zz\n";
     file_dip_ind << "#Record_number Mol_number e_ind_x e_ind_y e_ind_z at the order N\n";
     file_dip << "#Record_number Mol_number dip_x dip_y dip_z\n";
+    file_dip_f << "#Record_number Mol_number dip_x dip_y dip_z\n";
     file_pol << "#Record_number Mol_number pol_xx pol_xy pol_xz pol_yx pol_yy pol_yz pol_zx pol_zy pol_zz\n";
+    file_pol_f << "#Record_number Mol_number pol_xx pol_xy pol_xz pol_yx pol_yy pol_yz pol_zx pol_zy pol_zz\n";
     file_pol_ind << "#Record_number Mol_number a_ind_xx xy xz yx yy yz zx zy zz at the order N\n";
     if((*sys).typ_dip + (*sys).typ_pol){ /* Atomic dipole moment or polarizability */
         file_Tij_at.open(DEBUG_TIJ_AT);
@@ -461,6 +474,7 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
     //NOW loop over trajectory frames
     for(int frame_i=input.stepi; (frame_i < input.stepf) && (frame_i < traj->nframes()) ; frame_i++)
     {
+        cout << "\rProcessing frame " << frame_i  << std::flush;
         traj->readFrame(frame_i);
         traj->updateGroupCoords(topology);
         //NOTE probably the culprit, Kill it!
@@ -470,7 +484,7 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
         std::vector<vect_3d> dip0_mol((*sys).nb_mol);
                 
         
-        //#pragma omp parallel for
+        #pragma omp parallel for
         for (int mol_i = 0; mol_i < all_mols.size(); mol_i++)
         {
             all_mols[mol_i].reimage();
@@ -479,14 +493,13 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
         /*================================================================================
          * Calculation of* the complete dipole moment / polarizability (permanent + induced)
          *================================================================================*/
-        cout << "calling val_init " << endl;
         val_init(sys,all_mols,dip0,dip0_mol,pol0,pol0_mol,file_traj,file_dip0,file_pol0,step);/*dip0, pol0*/
-        cout << "done val_init" << endl;
-        comp_dip_pol(sys, all_mols, dip0, dip0_mol, dip, dip_mol, pol0, pol0_mol, pol, pol_mol, e_ind, a_ind, v3_tmp, m3_tmp, Tij_mc, Tij_at, fthole, fileo, file_Tij_mc, file_Tij_at, file_dip, file_pol, file_dip_ind, file_pol_ind, step);
+        comp_dip_pol(sys, all_mols, dip0, dip0_mol, dip, dip_mol, pol0, pol0_mol, pol, pol_mol, e_ind, a_ind, v3_tmp, m3_tmp, Tij_mc, Tij_at, fthole, fileo, file_Tij_mc, file_Tij_at, file_dip, file_pol, file_dip_ind, file_pol_ind, file_dip_f, file_pol_f, step);
         
         
         (*sys).step_max++; /* Real number of steps recorded (can be lower than stepf-stepi+1) */
     }//end loop over trajectory
+    cout << endl;
     
     /* Release the memory */
     free(dip);
@@ -504,6 +517,8 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
     if((*sys).typ_dip + (*sys).typ_pol){free(Tij_at);}
     
     fileo.close();
+    file_dip_f.close();
+    file_pol_f.close();
     #ifndef YUKI
     file_traj.close();
     #endif

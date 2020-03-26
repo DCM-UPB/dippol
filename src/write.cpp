@@ -52,25 +52,24 @@ void write_dippol(sys_info sys, std::vector<vect_3d> &dip0, vect_3d *dip, mat_sy
       break;
     }
 
-    for(i=0;i<sys.nb_mol;i++){
-      inc_dip =v3_shift*i;
-      inc_pol =m3_shift*i;
-      inc_pol0=m3_sym_shift*i;
-      
-#ifndef YUKI
-      fileo << std::setw(18) << p_dip0[inc_dip] << std::setw(18) << p_dip[inc_dip] << std::setw(18) << p_pol0[inc_pol0] << std::setw(18) << p_pol[inc_pol] << endl;
-      //fprintf(fileo,"%12.7f %12.7f %12.7f %12.7f\n",p_dip0[inc_dip],p_dip[inc_dip],p_pol0[inc_pol0],p_pol[inc_pol]);
-#else
-      /*Conversion from Ang^3 to bohr^3
-       Then conversion from real to integers with Yuki style */
-      fileo << (p_dip0[inc_dip])*1000+5000 << (p_dip[inc_dip]-p_dip0[inc_dip])*1000+5000 << (p_pol[inc_pol]/pow(0.529177249,3)*10000-20000)*0.3 << endl;
-//       fprintf(fileo,"%5.0f%5.0f%5.0f\n",
-// 	      (p_dip0[inc_dip])*1000+5000,				
-// 	      (p_dip[inc_dip]-p_dip0[inc_dip])*1000+5000,
-// 	      (p_pol[inc_pol]/pow(0.529177249,3)*10000-20000)*0.3			
-// 	      );
-#endif
-
+    for(int i=0;i<sys.nb_mol;i++){
+        inc_dip =v3_shift*i;
+        inc_pol =m3_shift*i;
+        inc_pol0=m3_sym_shift*i;
+        
+        #ifndef YUKI
+        fileo << std::setw(18) << p_dip0[inc_dip] << std::setw(18) << p_dip[inc_dip] << std::setw(18) << p_pol0[inc_pol0] << std::setw(18) << p_pol[inc_pol] << endl;
+        //fprintf(fileo,"%12.7f %12.7f %12.7f %12.7f\n",p_dip0[inc_dip],p_dip[inc_dip],p_pol0[inc_pol0],p_pol[inc_pol]);
+        #else
+        /*Conversion from Ang^3 to bohr^3
+         Then con*version from real to integers with Yuki style */
+        fileo << (p_dip0[inc_dip])*1000+5000 << (p_dip[inc_dip]-p_dip0[inc_dip])*1000+5000 << (p_pol[inc_pol]/pow(0.529177249,3)*10000-20000)*0.3 << endl;
+        //       fprintf(fileo,"%5.0f%5.0f%5.0f\n",
+        // 	      (p_dip0[inc_dip])*1000+5000,				
+        // 	      (p_dip[inc_dip]-p_dip0[inc_dip])*1000+5000,
+        // 	      (p_pol[inc_pol]/pow(0.529177249,3)*10000-20000)*0.3			
+        // 	      );
+        #endif
     }
   }
   else{  /* An average will be done between 2 polarization (eg XXZ and YYZ) */
@@ -99,7 +98,7 @@ void write_dippol(sys_info sys, std::vector<vect_3d> &dip0, vect_3d *dip, mat_sy
       p_dip0=&(dip0[0].z());
     }
 
-    for(i=0;i<sys.nb_mol;i++){
+    for(int i=0;i<sys.nb_mol;i++){
       inc_dip =v3_shift*i;
       inc_pol =m3_shift*i;
       inc_pol0=m3_sym_shift*i;

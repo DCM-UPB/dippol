@@ -25,7 +25,7 @@ void val_init(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std::vec
   double v_oh1[3]={0.}, v_oh2[3]={0.};
   loos::GCoord voh1, voh2;
     
-  //#pragma omp parallel for
+  #pragma omp parallel for
   for(uint mol_i=0 ; mol_i < mol.size(); mol_i++){
       #ifndef YUKI
       const loos::GCoord com = mol[mol_i].centerOfMass();
@@ -122,8 +122,8 @@ void val_init(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std::vec
   by Morita and Hynes, J. Phys. Chem. B 2002, 106, 673-685
   and calculated only once (Yuki version)
 */
-void comp_dip_pol(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std::vector<vect_3d> &dip0, std::vector<vect_3d> &dip0_mol, vect_3d *dip, vect_3d *dip_mol, mat_sym_3d *pol0, mat_sym_3d *pol0_mol, mat_3d *pol, mat_3d *pol_mol, vect_3d *e_ind, mat_3d *a_ind, vect_3d *v3_tmp, mat_3d *m3_tmp, mat_sym_3d *Tij_mc, mat_sym_3d *Tij_at, double *fthole, std::ofstream &fileo, std::ofstream &file_Tij_mc, std::ofstream &file_Tij_at, std::ofstream &file_dip, std::ofstream &file_pol, std::ofstream &file_dip_ind, std::ofstream &file_pol_ind, int step){
-  int i=0 , j=0 , ij=0, test_scf=0;
+void comp_dip_pol(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std::vector<vect_3d> &dip0, std::vector<vect_3d> &dip0_mol, vect_3d *dip, vect_3d *dip_mol, mat_sym_3d *pol0, mat_sym_3d *pol0_mol, mat_3d *pol, mat_3d *pol_mol, vect_3d *e_ind, mat_3d *a_ind, vect_3d *v3_tmp, mat_3d *m3_tmp, mat_sym_3d *Tij_mc, mat_sym_3d *Tij_at, double *fthole, std::ofstream &fileo, std::ofstream &file_Tij_mc, std::ofstream &file_Tij_at, std::ofstream &file_dip, std::ofstream &file_pol, std::ofstream &file_dip_ind, std::ofstream &file_pol_ind, std::ofstream &file_dip_f, std::ofstream &file_pol_f, int step){
+  int test_scf=0;
   
   /* Calculation of the dipole field tensor Tij*/
   calc_tij(sys,mol,fthole,Tij_mc,(*sys).nb_mol,file_Tij_mc,step);/*Molecular*/
@@ -143,10 +143,13 @@ void comp_dip_pol(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std:
   while(test_scf){
       /*Initialization*/
       test_scf=0;
-      for(i=0;i<(*sys).nb_dip;i++){
+      #pragma omp parallel for
+      for(int i=0;i<(*sys).nb_dip;i++){
           v3_tmp[i].x()=0.; v3_tmp[i].y()=0.; v3_tmp[i].z()=0.;
       }
-      for(i=0;i<(*sys).nb_pol;i++){
+      
+      #pragma omp parallel for
+      for(int i=0;i<(*sys).nb_pol;i++){
           m3_tmp[i].xx=0.; m3_tmp[i].xy=0.; m3_tmp[i].xz=0.;
           m3_tmp[i].yx=0.; m3_tmp[i].yy=0.; m3_tmp[i].yz=0.;
           m3_tmp[i].zx=0.; m3_tmp[i].zy=0.; m3_tmp[i].zz=0.;
@@ -156,10 +159,10 @@ void comp_dip_pol(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std:
       /*-Sum Tij.e_ind[j], -Sum Tij.a_ind[j]*/
       /*-Sum Tji.e_ind[i], -Sum Tji.a_ind[i]*/
       /* Dipole*/
-      ij=0;
       if((*sys).typ_dip){/*Atomic*/
-          for(i=0;i<(*sys).nb_dip;i++){
-              for(j=i+1;j<(*sys).nb_dip;j++){
+          int ij=0;
+          for(int i=0;i<(*sys).nb_dip;i++){
+              for(int j=i+1;j<(*sys).nb_dip;j++){
                   sumT_dip(&(Tij_at[ij]),e_ind[j],v3_tmp[i]);
                   sumT_dip(&(Tij_at[ij]),e_ind[i],v3_tmp[j]);
                   ij++;
@@ -167,33 +170,34 @@ void comp_dip_pol(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std:
           }
       }
       else{/*Molecular*/
-          for(i=0;i<(*sys).nb_dip;i++){
+          //#pragma omp parallel for
+          for(int i=0;i<(*sys).nb_dip;i++){
               int factor =0;
               for (int f_i=0; f_i < i; ++f_i)
                   factor += f_i+1;
-              for(j=i+1;j<(*sys).nb_dip;j++){
-                  ij = i*(*sys).nb_dip - factor + j -i-1;
-                  cout << std::setw(5) << i 
-                  << std::setw(5) << j
-                  << std::setw(5) << ij << endl;
+              for(int j=i+1;j<(*sys).nb_dip;j++){
+                  int ij = i*(*sys).nb_dip - factor + j -i-1;
+                  //cout << std::setw(5) << i 
+                  //<< std::setw(5) << j
+                  //<< std::setw(5) << ij << endl;
                   //ij = index;
                   sumT_dip(&(Tij_mc[ij]),e_ind[j],v3_tmp[i]);
                   sumT_dip(&(Tij_mc[ij]),e_ind[i],v3_tmp[j]);
                   //cout << "Checking " << i << endl;
-                  cout << i << " " << v3_tmp[i] << "  " << j << "  " << v3_tmp[i] << endl;
+                  //cout << i << " " << v3_tmp[i] << "  " << j << "  " << v3_tmp[i] << endl;
                   //ij++;
               }
           }
       }
-      cout  << "done molecular" << endl;
+
       /*Polarizability*/
-      ij=0;
       if((*sys).typ_pol){/*Atomic*/
-          for(i=0;i<(*sys).nb_pol;i++){
+          int ij=0;
+          for(int i=0;i<(*sys).nb_pol;i++){
               int factor =0;
               for (int f_i=0; f_i < i; ++f_i)
                   factor += f_i+1;        
-              for(j=i+1;j<(*sys).nb_pol;j++){
+              for(int j=i+1;j<(*sys).nb_pol;j++){
                   ij = i*(*sys).nb_pol - factor + j -i-1;
                   sumT_pol(&(Tij_at[ij]),&(a_ind[j]),&(m3_tmp[i]));
                   sumT_pol(&(Tij_at[ij]),&(a_ind[i]),&(m3_tmp[j]));
@@ -202,46 +206,45 @@ void comp_dip_pol(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std:
           }
       }
       else{/*Molecular*/
-          for(i=0;i<(*sys).nb_pol;i++){
+          for(int i=0;i<(*sys).nb_pol;i++){
               int factor =0;
               for (int f_i=0; f_i < i; ++f_i)
                   factor += f_i+1;        
-              for(j=i+1;j<(*sys).nb_pol;j++){
-                  int index = i*(*sys).nb_pol - factor + j -i-1;
-                  ij = index;
+              for(int j=i+1;j<(*sys).nb_pol;j++){
+                  int ij = i*(*sys).nb_pol - factor + j -i-1;
                   sumT_pol(&(Tij_mc[ij]),&(a_ind[j]),&(m3_tmp[i]));
                   sumT_pol(&(Tij_mc[ij]),&(a_ind[i]),&(m3_tmp[j]));
                   //ij++;
               }
           }
       }
-      cout << "done molecular2" << endl;
+      
       /*==========================================================*/
       /* Calculation of the induced dipole moment at the order N+1*/
       /*==========================================================*/
       if((*sys).typ_dip){/*Atomic*/
-          for(i=0;i<(*sys).nb_dip;i++){
+          for(int i=0;i<(*sys).nb_dip;i++){
               /*If atomic dipole, therefore there are atomic polarizabilities
                So it is sure t*hat pol0[i] is define*d*/
               mult_msym_v_3d(&(pol0[i]),v3_tmp[i],e_ind[i]);
           }
       }
       else{/*Molecular*/
-          for(i=0;i<(*sys).nb_dip;i++){
-              cout << m_to_eigen(pol0_mol[i]) << endl;
-              cout << v3_tmp[i] << endl;
-              cout << e_ind[i] << endl;
+          for(int i=0;i<(*sys).nb_dip;i++){
+              //cout << m_to_eigen(pol0_mol[i]) << endl;
+              //cout << v3_tmp[i] << endl;
+              //cout << e_ind[i] << endl;
               mult_msym_v_3d(&(pol0_mol[i]),v3_tmp[i],e_ind[i]);
-              cout << v3_tmp[i] << "   " << e_ind[i] << endl;
+              //cout << v3_tmp[i] << "   " << e_ind[i] << endl;
           }
       }
-      cout << "done now" << endl;
-      for(i=0;i<(*sys).nb_dip;i++){
+      
+      for(int i=0;i<(*sys).nb_dip;i++){
           /*Update of the complete dipole at the order N+1*/
           dip[i].x() += e_ind[i].x();
           dip[i].y() += e_ind[i].y();
           dip[i].z() += e_ind[i].z();
-          cout << i << "   " << dip[i] << "   " << e_ind[i] << endl;
+          
           /*The norm of the induced dipole is not converged*/
           if(sqrt(pow(e_ind[i].x(),2)+pow(e_ind[i].y(),2)+pow(e_ind[i].z(),2))>DIP_CONV){
               test_scf=1;
@@ -260,11 +263,11 @@ void comp_dip_pol(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std:
           #endif
           
       }
-      cout << "done molecular3" << endl;
+      
       /*===========================================================*/
       /* Calculation of the induced polarizability at the order N+1*/
       /*===========================================================*/
-      for(i=0;i<(*sys).nb_pol;i++){
+      for(int i=0;i<(*sys).nb_pol;i++){
           mult_msym_m_3d(&(pol0[i]),&(m3_tmp[i]),&(a_ind[i]));
           
           /*Update of the complete polarizability at the order N+1*/
@@ -303,33 +306,47 @@ void comp_dip_pol(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std:
       }/* Induced polarizability*/
   }/*SCF*/
   
-  cout << "done molecular5" << endl;
+  //cout << "done molecular5" << endl;
   /*===================================
    *  Calculation of the molecular values
    * ===================================*/
   /* Dipole moment */
   if((*sys).typ_dip){
-      for(i=0;i<(*sys).nb_mol;i++){
+      for(int i=0;i<(*sys).nb_mol;i++){
           dip_at2mol(&(dip[3*i]),&(dip_mol[i]));
       }
   }
   else{
       dip_mol=dip;
   }
-  cout <<"done molecular6" << endl;
+  
   /* Polarizability */
   if((*sys).typ_pol){ 
-      for(i=0;i<(*sys).nb_mol;i++){
+      for(int i=0;i<(*sys).nb_mol;i++){
           pol_at2mol(&(pol[3*i]),&(pol_mol[i]));
       }
   }
   else{
       pol_mol=pol;
   }
-  cout <<"done molecular7" << endl;
+  
+  for(int i=0;i<(*sys).nb_dip;i++){
+      file_dip_f << setw(10) << step << setw(5) << i 
+      << setw(18) << dip[i].x()
+      << setw(18) << dip[i].y()
+      << setw(18) << dip[i].z() << endl;
+  }
+  
+  for(int i=0;i<(*sys).nb_dip;i++){
+      file_pol_f << setw(10) << step << setw(5) << i
+      << setw(18) << pol[i].xx<< setw(18) << pol[i].xy<< setw(18) << pol[i].xz
+      << setw(18) << pol[i].yx<< setw(18) << pol[i].yy<< setw(18) << pol[i].yz
+      << setw(18) << pol[i].zx<< setw(18) << pol[i].zy<< setw(18) << pol[i].zz << endl;
+  }
+      
   /* We write the info about the dipole moment and the polarizability */
   write_dippol(*sys,dip0_mol,dip_mol,pol0_mol,pol_mol,fileo);
-  cout << "done write" << endl;
+  //cout << "done write" << endl;
   return;
 }
 
@@ -385,19 +402,21 @@ void sumT_pol(mat_sym_3d *tjk, mat_3d *pol, mat_3d *m3_tmp){
   the dipole moment and the polarizability*/
 void init_dip_pol(std::vector<vect_3d> &dip0, vect_3d *dip, mat_sym_3d *pol0, mat_3d *pol, sys_info *sys){
     int i=0;
-    cout << "initializing dipoles" << endl;
-  for(i=0;i<(*sys).nb_dip;i++){
-      dip[i].x()=dip0[i].x();
-      dip[i].y()=dip0[i].y();
-      dip[i].z()=dip0[i].z();
-  }
-  for(i=0;i<(*sys).nb_pol;i++){
-      pol[i].xx=pol0[i].xx; pol[i].xy=pol0[i].yx; pol[i].xz=pol0[i].zx;
-      pol[i].yx=pol0[i].yx; pol[i].yy=pol0[i].yy; pol[i].yz=pol0[i].zy;
-      pol[i].zx=pol0[i].zx; pol[i].zy=pol0[i].zy; pol[i].zz=pol0[i].zz;
-  }
-  
-  return;
+    //cout << "initializing dipoles" << endl;
+    #pragma omp parallel for
+    for(int i=0;i<(*sys).nb_dip;i++){
+        dip[i].x()=dip0[i].x();
+        dip[i].y()=dip0[i].y();
+        dip[i].z()=dip0[i].z();
+    }
+    #pragma omp parallel for
+    for(int i=0;i<(*sys).nb_pol;i++){
+        pol[i].xx=pol0[i].xx; pol[i].xy=pol0[i].yx; pol[i].xz=pol0[i].zx;
+        pol[i].yx=pol0[i].yx; pol[i].yy=pol0[i].yy; pol[i].yz=pol0[i].zy;
+        pol[i].zx=pol0[i].zx; pol[i].zy=pol0[i].zy; pol[i].zz=pol0[i].zz;
+    }
+    
+    return;
 }
 
 
@@ -405,7 +424,7 @@ void init_dip_pol(std::vector<vect_3d> &dip0, vect_3d *dip, mat_sym_3d *pol0, ma
  * Only for k>j because Tjk=Tkj and Tjj=0 */
 void calc_tij (sys_info* sys, const std::vector<loos::AtomicGroup> &mol, double* fthole, mat_sym_3d* Tij, int size, std::ofstream &file_Tij, int step )
 {
-    int i=0, j=0, ij=0;
+    int i=0, j=0;
     double r3=0., r5=0.;
     
 //     /*Calculation of the distance between the atoms i and j*/
@@ -464,17 +483,21 @@ void calc_tij (sys_info* sys, const std::vector<loos::AtomicGroup> &mol, double*
     //WARNING now atomic is broken, 
     //I have removed the old tedious code to compute x,y,z,r 
     // without writing code for atomic 
-    std::vector<double> x(size*(size-1)/2);
-    std::vector<double> y(size*(size-1)/2);
-    std::vector<double> z(size*(size-1)/2);
-    std::vector<double> r(size*(size-1)/2);
+    std::vector<double> x(size*(size-1)/2,0.0);
+    std::vector<double> y(size*(size-1)/2,0.0);
+    std::vector<double> z(size*(size-1)/2,0.0);
+    std::vector<double> r(size*(size-1)/2,0.0);
+    //cout << size*(size-1)/2 << endl;
     
-    for(i=0;i<size;i++){
+    #pragma omp parallel for
+    for(int i=0;i<size;i++){
         int factor =0;
         for (int f_i=0; f_i < i; ++f_i)
             factor += f_i+1;
-        for(j=i+1;j<size;j++){
-            ij = i*size - factor +j-i-1;
+        //cout << i << "  " << factor;
+        for(int j=i+1;j<size;j++){
+            int ij = i*size - factor +j-i-1;
+            //cout << " " << ij << endl;
             loos::GCoord distance = mol[i].centerOfMass() - mol[j].centerOfMass();
             distance.reimage((*sys).cell);
             r[ij] = distance.length();
@@ -483,15 +506,15 @@ void calc_tij (sys_info* sys, const std::vector<loos::AtomicGroup> &mol, double*
             z[ij] = distance.z();
         }
     }
-    cout <<"current size " << r.size() << endl;
+    //cout <<"current size " << r.size() << endl;
     
-    //#pragma omp parallel for 
-    for(i=0;i<size;i++){
+    #pragma omp parallel for 
+    for(int i=0;i<size;i++){
         int factor =0;
         for (int f_i=0; f_i < i; ++f_i)
             factor += f_i+1;
-        for(j=i+1;j<size;j++){
-            ij = i*size - factor +j-i-1;
+        for(int j=i+1;j<size;j++){
+            int ij = i*size - factor +j-i-1;
             //loos::GCoord distance = mol[i].centerOfMass() - mol[j].centerOfMass();
             //distance.reimage((*sys).cell);
             //double r = distance.length();
@@ -524,8 +547,8 @@ void calc_tij (sys_info* sys, const std::vector<loos::AtomicGroup> &mol, double*
     /*If we do not want intra molecular DID (for 3 points model only)*/
     if(size>(*sys).nb_mol){
         if((*sys).intra==0){
-            ij=0;
-            for(i=0;i<size;i=i+3){/*Only the O are passed*/
+            int ij=0;
+            for(int i=0;i<size;i=i+3){/*Only the O are passed*/
                 /*No interaction between O and H1*/
                 Tij[ij].xx=0.0;
                 Tij[ij].yx=0.0;	Tij[ij].yy=0.0;
@@ -548,24 +571,24 @@ void calc_tij (sys_info* sys, const std::vector<loos::AtomicGroup> &mol, double*
         }
     }
     
-    #ifdef DEBUG
-    ij=0; 
-    for(i=0;i<size;i++){
-        int factor =0;
-        for (int f_i=0; f_i < i; ++f_i)
-            factor += f_i+1;
-        for(j=i+1;j<size;j++){
-            ij = i*size - factor +j-i-1;
-            file_Tij << setw(10) << step << setw(10) << i << setw(5) << j
-            << setw(18) << Tij[ij].xx
-            << setw(18) << Tij[ij].yx
-            << setw(18) << Tij[ij].yy
-            << setw(18) << Tij[ij].zx
-            << setw(18) << Tij[ij].zy
-            << setw(18) << Tij[ij].zz << endl;
-        } 
-    } 
-    #endif 
+//     #ifdef DEBUG
+//     //ij=0; 
+//     for(int i=0;i<size;i++){
+//         int factor =0;
+//         for (int f_i=0; f_i < i; ++f_i)
+//             factor += f_i+1;
+//         for(int j=i+1;j<size;j++){
+//             int ij = i*size - factor +j-i-1;
+//             file_Tij << setw(10) << step << setw(10) << i << setw(5) << j
+//             << setw(18) << Tij[ij].xx
+//             << setw(18) << Tij[ij].yx
+//             << setw(18) << Tij[ij].yy
+//             << setw(18) << Tij[ij].zx
+//             << setw(18) << Tij[ij].zy
+//             << setw(18) << Tij[ij].zz << endl;
+//         } 
+//     } 
+//     #endif 
   
     return;
 }
@@ -580,15 +603,15 @@ void calc_tij (sys_info* sys, const std::vector<loos::AtomicGroup> &mol, double*
 void scf_protection(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, std::vector<vect_3d> &dip0, vect_3d *dip, mat_sym_3d *pol0, mat_sym_3d *pol0_mol, mat_3d *pol, mat_sym_3d *Tij_mc, vect_3d *e_ind, vect_3d *v3_tmp, mat_3d *m3_tmp, int step){
     int i=0, j=0, ij=0;
     std::ofstream file_pb;
-    cout << "done5" << endl;
+    //cout << "done5" << endl;
     /*Initialization*/
     init_dip_pol(dip0,dip,pol0,pol,sys);
     //#pragma omp parallel for
-    for(i=0;i<(*sys).nb_mol;i++){
+    for(int i=0;i<(*sys).nb_mol;i++){
         v3_tmp[i].x()=0.; v3_tmp[i].y()=0.; v3_tmp[i].z()=0.;
     }
     //#pragma omp parallel for
-    for(i=0;i<(*sys).nb_pol;i++){
+    for(int i=0;i<(*sys).nb_pol;i++){
         m3_tmp[i].xx=0.; m3_tmp[i].xy=0.; m3_tmp[i].xz=0.;
         m3_tmp[i].yx=0.; m3_tmp[i].yy=0.; m3_tmp[i].yz=0.;
         m3_tmp[i].zx=0.; m3_tmp[i].zy=0.; m3_tmp[i].zz=0.;
@@ -596,27 +619,27 @@ void scf_protection(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, st
     
     /*-Sum Tij.dip[j], -Sum Tij.pol[j]*/
     /*-Sum Tji.dip[i], -Sum Tji.pol[i] */
-    cout << "done4" << endl;
+    //cout << "done4" << endl;
     ij=0;
     //#pragma omp parallel for
-    for(i=0;i<(*sys).nb_mol;i++){
+    for(int i=0;i<(*sys).nb_mol;i++){
         int factor =0;
         for (int f_i=0; f_i < i; ++f_i)
             factor += f_i+1;
-        for(j=i+1;j<(*sys).nb_mol;j++){
+        for(int j=i+1;j<(*sys).nb_mol;j++){
             ij = i*(*sys).nb_mol - factor + j -i-1;
             sumT_dip(&(Tij_mc[ij]),dip[j],v3_tmp[i]);
             sumT_dip(&(Tij_mc[ij]),dip[i],v3_tmp[j]);
             //ij++;
         }
     }
-    cout <<"done3" << endl;
+    //cout <<"done3" << endl;
     //ij=0;
-    for(i=0;i<(*sys).nb_point;i++){
+    for(int i=0;i<(*sys).nb_point;i++){
         int factor =0;
         for (int f_i=0; f_i < i; ++f_i)
             factor += f_i+1;
-        for(j=i+1;j<(*sys).nb_point;j++){
+        for(int j=i+1;j<(*sys).nb_point;j++){
             ij = i*(*sys).nb_point - factor + j -i-1;
             sumT_pol(&(Tij_mc[ij]),(&pol[j]),(&m3_tmp[i]));
             sumT_pol(&(Tij_mc[ij]),(&pol[i]),(&m3_tmp[j]));
@@ -626,24 +649,24 @@ void scf_protection(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, st
     
     
     /*1-Sum Tij.pol[j]*/
-    for(i=0;i<(*sys).nb_point;i++){
+    for(int i=0;i<(*sys).nb_point;i++){
         m3_tmp[i].xx+=1.;
         m3_tmp[i].yy+=1.;
         m3_tmp[i].zz+=1.;
     }
     
     //#pragma omp parallel for
-    for(i=0;i<(*sys).nb_mol;i++){
+    for(int i=0;i<(*sys).nb_mol;i++){
         mult_msym_v_3d(&(pol0_mol[i]),v3_tmp[i],e_ind[i]);/*INDUCED dipole moment*/
         /*Total dipole*/
         dip[i].x() = dip0[i].x() + e_ind[i].x();
         dip[i].y() = dip0[i].y() + e_ind[i].y();
         dip[i].z() = dip0[i].z() + e_ind[i].z();
-        cout << i << "   " << dip[i] << "   " << e_ind[i] << endl;
+        //cout << i << "   " << dip[i] << "   " << e_ind[i] << endl;
     }
     
     //#pragma omp parallel for
-    for(i=0;i<(*sys).nb_point;i++){
+    for(int i=0;i<(*sys).nb_point;i++){
         mult_msym_m_3d(&(pol0[i]),&(m3_tmp[i]),&(pol[i]));/*TOTAL polarizability*/
     }
     
@@ -653,7 +676,7 @@ void scf_protection(sys_info *sys, const std::vector<loos::AtomicGroup> &mol, st
     file_pb.open(CONV_PB,std::ofstream::app);
     file_pb << (*sys).nb_mol << endl;
     file_pb << "i = " << step << " , this is the positions which had some convergence problem\n";
-    for(i=0;i<(*sys).nb_mol;i++){
+    for(int i=0;i<(*sys).nb_mol;i++){
         file_pb << " X  " << setw(15) << mol[i].centerOfMass().x() << setw(15) << mol[i].centerOfMass().y() << setw(15) << mol[i].centerOfMass().z() << endl;
     }
     file_pb.close();
@@ -666,8 +689,8 @@ void thole(double *r, double *fthole, int size){
     int i=0, j=0, ij=0;
     double x=0;
     
-    for(i=0;i<size;i++){
-        for(j=i+1;j<size;j++){
+    for(int i=0;i<size;i++){
+        for(int j=i+1;j<size;j++){
             x=A_THOLE*r[ij];
             
             /* Screening of the term in 1/r3 */
