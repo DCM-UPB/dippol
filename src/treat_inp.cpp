@@ -347,7 +347,7 @@ int read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
 int trajectory(sys_info *sys, input_info input, char *argv[]) {
     //H FILE *filei=NULL;
     std::ofstream file_debug;
-    int step=0, i=0, j=0;
+    //int step=0, i=0, j=0;
     //double time=0.;
     //char chain[CHAIN_SIZE]="";
     
@@ -499,8 +499,8 @@ int trajectory(sys_info *sys, input_info input, char *argv[]) {
         /*================================================================================
          * Calculation of* the complete dipole moment / polarizability (permanent + induced)
          *================================================================================*/
-        val_init(sys,all_mols,dip0,dip0_mol,pol0,pol0_mol,file_traj,file_dip0,file_pol0,step);/*dip0, pol0*/
-        comp_dip_pol(sys, all_mols, dip0, dip0_mol, dip, dip_mol, pol0, pol0_mol, pol, pol_mol, e_ind, a_ind, v3_tmp, m3_tmp, Tij_mc, Tij_at, fthole, fileo, file_Tij_mc, file_Tij_at, file_dip, file_pol, file_dip_ind, file_pol_ind, file_dip_f, file_pol_f, step);
+        val_init(sys,all_mols,dip0,dip0_mol,pol0,pol0_mol,file_traj,file_dip0,file_pol0,frame_i);/*dip0, pol0*/
+        comp_dip_pol(sys, all_mols, dip0, dip0_mol, dip, dip_mol, pol0, pol0_mol, pol, pol_mol, e_ind, a_ind, v3_tmp, m3_tmp, Tij_mc, Tij_at, fthole, fileo, file_Tij_mc, file_Tij_at, file_dip, file_pol, file_dip_ind, file_pol_ind, file_dip_f, file_pol_f, frame_i);
         
         
         (*sys).step_max++; /* Real number of steps recorded (can be lower than stepf-stepi+1) */

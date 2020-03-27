@@ -61,15 +61,18 @@ void dippol0_molmol(sys_info *sys, const loos::AtomicGroup molecule, vect_3d &di
     dip0.y()=rot_dip(1);
     dip0.z()=rot_dip(2);
     
-    //     cout << "4" << endl << endl;
-    //     for (int i =0; i <3; i++)
-    //         cout << "O " << (dcm * gcoord_to_eigenv(ref[i]->coords())).transpose() << endl;
-    //     cout << "X " << gcoord_to_eigenv(dip0).transpose() << endl << endl << endl;
-    //     
-    //     
-    //     cout << "3" << endl << endl;
-    //     for (int i =0; i <3; i++)
-    //         cout << "O " << gcoord_to_eigenv(temp[i]->coords()).transpose() << endl;
+//     //NOTE uncomment to check alignment
+//     cout << "ref " << sys->all_mol_types[molecule[0]->resname()].dip << endl;
+//     cout << "rot " << dip0 << endl;
+//     cout << ref.size()+1 << endl << endl;
+//     for (int i =0; i <ref.size(); i++)
+//         cout << std::setw(5) << std::left << ref[i]->name() << (dcm * gcoord_to_eigenv(ref[i]->coords())).transpose() << endl;
+//     cout << "X " << gcoord_to_eigenv(dip0).transpose() << endl << endl << endl;
+//          
+//     
+//     cout << ref.size() << endl << endl;
+//     for (int i =0; i < ref.size(); i++)
+//         cout << std::setw(5) << std::left << ref[i]->name() << gcoord_to_eigenv(temp[i]->coords()).transpose() << endl;
     
     //Now transform alpha
     Eigen::Matrix3d alpha_rot = dcm * sys->all_mol_types[molecule[0]->resname()].alpha_m * dcm.transpose();
