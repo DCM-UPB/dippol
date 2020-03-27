@@ -84,6 +84,12 @@ int read_input(input_info *input, sys_info *sys, int argc, char *argv[]){
   //fgets(chain,CHAIN_SIZE,file);
   file.getline(chain,CHAIN_SIZE);
   sscanf(chain,"%d %d %d",&((*input).stepi),&((*input).stepf),&((*input).stepd));
+  if ((*input).stepd == 0)
+  {
+      cout << "Error reading input!" << endl;
+      cout << "Make sure you provide initial, final, and increment trajectory steps" << endl;
+      exit(0);
+  }
 
   /*Order of the atoms (only the first character will be read)*/
   //fgets(chain,CHAIN_SIZE,file);
